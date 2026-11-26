@@ -73,7 +73,12 @@ describe("ResourceEditReview", () => {
     expect(onSaved).toHaveBeenCalledWith(newer);
   });
 
-  it("reports unchanged drafts without publishing", async () => {    mocks.saveResourceEdit.mockResolvedValueOnce({ changed: false, resource: base, source: "demo" });
+  it("reports unchanged drafts without publishing", async () => {
+    mocks.saveResourceEdit.mockResolvedValueOnce({
+      changed: false,
+      resource: base,
+      source: "demo"
+    });
     renderReview(draftFromResource(base));
 
     expect(screen.getByText(/draft matches the current version/i)).toBeInTheDocument();

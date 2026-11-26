@@ -1,17 +1,23 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi, type Mock } from "vitest";
 
 import { DefaultTelemetryService, createTelemetryService } from "./index";
 import { NoOpSink, ConsoleSink } from "./sink";
-import type { TelemetryConfig, TelemetryEvent } from "./types";
+import type {
+  TelemetryConfig,
+  TelemetryEvent,
+  TelemetryEventType,
+  TelemetrySink,
+  WalletErrorCode
+} from "./types";
 
 describe("DefaultTelemetryService", () => {
-  let mockSink: any;
+  let mockSink: { send: Mock<TelemetrySink["send"]> };
   let config: TelemetryConfig;
   let service: DefaultTelemetryService;
 
   beforeEach(() => {
     mockSink = {
-      send: vi.fn()
+      send: vi.fn<TelemetrySink["send"]>()
     };
     config = {
       enabled: true,
@@ -73,13 +79,13 @@ describe("DefaultTelemetryService", () => {
           errorCode: "WALLET_REJECTED",
           // This field should be stripped:
           unknownField: "should-be-ignored"
-        } as any
+        } as unknown as TelemetryEvent["data"]
       });
 
       expect(result).toBe(true);
       expect(mockSink.send).toHaveBeenCalled();
 
-      const sentEvent = mockSink.send.mock.calls[0][0] as TelemetryEvent;
+      const sentEvent = mockSink.send.mock.calls[0]![0];
       expect(sentEvent.data).toHaveProperty("status");
       expect(sentEvent.data).toHaveProperty("errorCode");
       expect(sentEvent.data).not.toHaveProperty("unknownField");
@@ -87,9 +93,9 @@ describe("DefaultTelemetryService", () => {
 
     it("should reject unknown event types", () => {
       const result = service.emit({
-        eventType: "unknown_event_type" as any,
+        eventType: "unknown_event_type" as unknown as TelemetryEventType,
         context: { sessionId: "test", networkId: "stellar:testnet" },
-        data: { type: "unknown_event_type" as any }
+        data: { type: "unknown_event_type" } as unknown as TelemetryEvent["data"]
       });
 
       expect(result).toBe(false);
@@ -121,7 +127,7 @@ describe("DefaultTelemetryService", () => {
           assetCode: "USDC", // valid
           // But we'll inject a wallet address in the context
           walletAddress: "GDZST3XVCDTUJ76ZAV2HA72KYYX4YQFOMLZZZNNFNM3XJN2YQMXIJPME"
-        } as any
+        } as unknown as TelemetryEvent["data"]
       });
 
       expect(result).toBe(false);
@@ -136,7 +142,7 @@ describe("DefaultTelemetryService", () => {
           type: "payment_verification_attempted",
           resourceType: "service",
           assetCode: "ABCDEF" + "A".repeat(128) // 134 hex chars (signature-like)
-        } as any
+        }
       });
 
       expect(result).toBe(false);
@@ -151,7 +157,7 @@ describe("DefaultTelemetryService", () => {
           resourceType: "service",
           assetCode: "USDC",
           signature: "secret_value"
-        } as any
+        } as unknown as TelemetryEvent["data"]
       });
 
       expect(result).toBe(false);
@@ -165,7 +171,7 @@ describe("DefaultTelemetryService", () => {
           type: "payment_verification_attempted",
           resourceType: "service",
           assetCode: ["USDC", "GDZST3XVCDTUJ76ZAV2HA72KYYX4YQFOMLZZZNNFNM3XJN2YQMXIJPME"] // address in array
-        } as any
+        } as unknown as TelemetryEvent["data"]
       });
 
       expect(result).toBe(false);
@@ -206,7 +212,7 @@ describe("DefaultTelemetryService", () => {
         data: {
           type: "wallet_connect_attempt",
           status: "initiated", // valid
-          errorCode: "INVALID_ERROR_CODE" as any // invalid
+          errorCode: "INVALID_ERROR_CODE" as unknown as WalletErrorCode // invalid
         }
       });
 
@@ -237,7 +243,7 @@ describe("DefaultTelemetryService", () => {
         data: {
           type: "ui_error_displayed",
           errorCategory: "UNKNOWN_ERROR",
-          source: hugeString as any
+          source: hugeString
         }
       });
 
@@ -265,8 +271,8 @@ describe("DefaultTelemetryService", () => {
 
       const events = service.getCollectedEvents();
       expect(events).toHaveLength(2);
-      expect(events[0].eventType).toBe("app_initialized");
-      expect(events[1].eventType).toBe("wallet_connect_success");
+      expect(events[0]?.eventType).toBe("app_initialized");
+      expect(events[1]?.eventType).toBe("wallet_connect_success");
     });
   });
 
@@ -283,7 +289,7 @@ describe("DefaultTelemetryService", () => {
       });
 
       expect(mockSink.send).toHaveBeenCalledTimes(1);
-      const sentEvent = mockSink.send.mock.calls[0][0];
+      const sentEvent = mockSink.send.mock.calls[0]![0];
       expect(sentEvent).toHaveProperty("timestamp");
       expect(sentEvent.eventType).toBe("app_initialized");
     });
@@ -337,7 +343,7 @@ describe("ConsoleSink", () => {
 
     expect(consoleSpy).toHaveBeenCalled();
     const callArgs = consoleSpy.mock.calls[0];
-    expect(callArgs[0]).toContain("event: app_initialized");
+    expect(callArgs?.[0]).toContain("event: app_initialized");
 
     consoleSpy.mockRestore();
   });

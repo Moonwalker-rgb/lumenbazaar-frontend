@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
  * Compute the SHA-256 checksum of the vendored OpenAPI document.
- * 
+ *
  * Usage:
  *   node scripts/compute-pin-checksum.mjs [output-format]
- * 
+ *
  * Outputs the checksum in the specified format:
  *   - hex (default): hexadecimal string
  *   - json: JSON format for pasting into backend-pin.json
@@ -25,13 +25,7 @@ try {
       console.log(hash);
       break;
     case "json":
-      console.log(
-        JSON.stringify(
-          { "artifact.sha256": hash },
-          null,
-          2
-        )
-      );
+      console.log(JSON.stringify({ "artifact.sha256": hash }, null, 2));
       break;
     case "bash":
       console.log(`export BACKEND_PIN_SHA256="${hash}"`);

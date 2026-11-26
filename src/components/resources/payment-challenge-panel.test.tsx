@@ -16,7 +16,7 @@ const resource = {
 };
 const requirement = {
   amount: "500000",
-  asset: "CASSETDEMO",
+  asset: "CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS",
   extra: {
     assetCode: resource.assetCode,
     assetIssuer: resource.assetIssuer

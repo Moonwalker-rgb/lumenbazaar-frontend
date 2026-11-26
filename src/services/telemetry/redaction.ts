@@ -31,22 +31,22 @@ const SENSITIVE_KEYS = [
 const SENSITIVE_PATTERNS = [
   // Stellar address (32 chars base32-like: G[A-Z2-7]{55})
   /^G[A-Z2-7]{55}$/,
-  
+
   // Stellar private key (S[A-Z2-7]{55})
   /^S[A-Z2-7]{55}$/,
-  
+
   // Signature or transaction hash (128+ hex chars)
   /^[A-F0-9]{128,}$/i,
-  
+
   // Transaction hash (64 hex chars)
   /^[A-F0-9]{64}$/i,
-  
+
   // Authorization or signature headers
   /(authorization|x-payment-signature):/i,
-  
+
   // Generic bearer token pattern
   /\bbearer\s+[A-Za-z0-9._-]+/i,
-  
+
   // JWT-like pattern (three base64 parts separated by dots)
   /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
 ];
@@ -91,7 +91,7 @@ export function containsSensitiveData(value: unknown): boolean {
     if (isSensitiveKey(key)) {
       return true;
     }
-    
+
     // Sensitive nested value?
     if (containsSensitiveData(val)) {
       return true;

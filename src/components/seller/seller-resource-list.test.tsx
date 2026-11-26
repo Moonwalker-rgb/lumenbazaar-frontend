@@ -8,6 +8,7 @@ import { demoResources } from "@/fixtures/lumenbazaar";
 import type { Resource } from "@/services/api/schemas";
 
 import { SellerResourceList } from "./seller-resource-list";
+import { SellerSessionProvider } from "./seller-session-provider";
 
 const mocks = vi.hoisted(() => ({
   disable: vi.fn(),
@@ -146,7 +147,9 @@ function renderList() {
 
   return render(<SellerResourceList sellerId="seller_atlas_weather" />, {
     wrapper: ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      <QueryClientProvider client={client}>
+        <SellerSessionProvider>{children}</SellerSessionProvider>
+      </QueryClientProvider>
     )
   });
 }

@@ -7,6 +7,7 @@ This document describes the asset trust verification feature that warns users wh
 ## Problem Statement
 
 Users need a clear distinction between:
+
 - **Trusted assets**: Soroban contract IDs configured in the network registry
 - **Unknown assets**: Valid contract IDs not in the registry
 - **Lookalike assets**: Same symbol but different contract ID (e.g., fake USDC)
@@ -19,12 +20,12 @@ Without explicit verification, users could accidentally send payment to a malici
 
 All payment assets are classified into one of four categories:
 
-| Status | Reason | User Action |
-|--------|--------|-------------|
-| **Trusted** | Contract ID matches a registry entry | Proceed normally |
-| **Unknown** | Valid contract ID, not in registry | Requires explicit checkbox + confirmation |
-| **Malformed** | Invalid contract ID format | Cannot proceed (must fix) |
-| **Network-Mismatched** | Contract from different network | Error state (future use) |
+| Status                 | Reason                               | User Action                               |
+| ---------------------- | ------------------------------------ | ----------------------------------------- |
+| **Trusted**            | Contract ID matches a registry entry | Proceed normally                          |
+| **Unknown**            | Valid contract ID, not in registry   | Requires explicit checkbox + confirmation |
+| **Malformed**          | Invalid contract ID format           | Cannot proceed (must fix)                 |
+| **Network-Mismatched** | Contract from different network      | Error state (future use)                  |
 
 ### 2. Registry Configuration
 
@@ -39,9 +40,9 @@ export const stellarNetworks: Record<NetworkId, NetworkConfig> = {
         symbol: "USDC",
         decimals: 6,
         issuer: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"
-      },
+      }
       // ... more assets
-    ],
+    ]
     // ... other network config
   }
 };
@@ -210,6 +211,7 @@ A phishing email could direct users to a fake "payment" with an unknown asset.
 - `src/components/resources/payment-requirement-viewer.test.tsx`: Warning UI and confirmation flow
 
 **Test Coverage**:
+
 - ✓ Trusted asset classification
 - ✓ Unknown asset classification
 - ✓ Malformed asset classification

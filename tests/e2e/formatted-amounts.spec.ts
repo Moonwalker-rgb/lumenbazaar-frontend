@@ -226,7 +226,10 @@ test.describe("Formatted Amounts Display", () => {
 
       if (count > 0) {
         // At least one atomic value should be visible
-        const isVisible = await atomicLabels.first().isVisible().catch(() => false);
+        const isVisible = await atomicLabels
+          .first()
+          .isVisible()
+          .catch(() => false);
         expect(isVisible || count > 0).toBe(true);
       }
     });
@@ -238,13 +241,19 @@ test.describe("Formatted Amounts Display", () => {
       await page.waitForSelector("text=atomic:", { timeout: 5000 }).catch(() => {});
 
       const atomicLabels = page.locator("text=atomic:");
-      const isHidden = await atomicLabels.first().isHidden().catch(() => true);
+      const isHidden = await atomicLabels
+        .first()
+        .isHidden()
+        .catch(() => true);
 
       // Atomic should not be completely hidden
       if (atomicLabels) {
-        const computedStyle = await atomicLabels.first().evaluate((el) => {
-          return window.getComputedStyle(el);
-        }).catch(() => null);
+        const computedStyle = await atomicLabels
+          .first()
+          .evaluate((el) => {
+            return window.getComputedStyle(el);
+          })
+          .catch(() => null);
 
         // Should have reasonable display (not display: none)
         if (computedStyle) {

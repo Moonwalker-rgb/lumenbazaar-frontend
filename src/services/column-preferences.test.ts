@@ -153,9 +153,7 @@ describe("column-preferences", () => {
         requiredColumns: ["id"] // 'id' is required but not visible
       };
 
-      expect(() => saveColumnPreference(pref, storage)).toThrow(
-        /Cannot hide required columns/
-      );
+      expect(() => saveColumnPreference(pref, storage)).toThrow(/Cannot hide required columns/);
     });
 
     it("allows hiding non-required columns", () => {
@@ -291,10 +289,7 @@ describe("column-preferences", () => {
       const columns = ["id", "name", "status"];
       const required = ["id"];
 
-      saveColumnPreference(
-        initializeColumnPreference("table-1", columns, required),
-        storage
-      );
+      saveColumnPreference(initializeColumnPreference("table-1", columns, required), storage);
 
       const updated = toggleColumnVisibility("table-1", "status", columns, required, storage);
 
@@ -323,10 +318,7 @@ describe("column-preferences", () => {
       const columns = ["id", "name", "status"];
       const required = ["id"];
 
-      saveColumnPreference(
-        initializeColumnPreference("table-1", columns, required),
-        storage
-      );
+      saveColumnPreference(initializeColumnPreference("table-1", columns, required), storage);
 
       expect(() => toggleColumnVisibility("table-1", "id", columns, required, storage)).toThrow(
         /Cannot hide required column: id/

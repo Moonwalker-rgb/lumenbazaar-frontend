@@ -45,7 +45,8 @@ describe("generateExportFileName", () => {
       );
       const generatedTime = generated.getTime();
 
-      expect(generatedTime).toBeGreaterThanOrEqual(before);
+      // File names use whole-second precision, so truncate `before` likewise.
+      expect(generatedTime).toBeGreaterThanOrEqual(Math.floor(before / 1000) * 1000);
       expect(generatedTime).toBeLessThanOrEqual(after + 1000); // Allow 1 second buffer
     }
   });
@@ -66,10 +67,12 @@ describe("generateExportFileName", () => {
     const timestamp = new Date("2024-11-15T14:30:45.999Z");
     const fileName = generateExportFileName("json", timestamp);
 
-    // Should not contain colons (except in the timestamp string itself)
-    const parts = fileName.split(".");
-    expect(parts[0]).not.toContain(":");
-    expect(parts[0]).not.toContain("-");
+    // Only the timestamp portion must be free of separators; the
+    // "settlement-evidence-" prefix legitimately contains dashes.
+    const timestampStr = fileName.match(/\d{8}T\d{6}Z/)?.[0];
+    expect(timestampStr).toBeDefined();
+    expect(timestampStr).not.toContain(":");
+    expect(timestampStr).not.toContain("-");
   });
 });
 
@@ -79,19 +82,15 @@ describe("downloadFile", () => {
   let removeChildSpy: ReturnType<typeof vi.spyOn>;
   let createObjectURLSpy: ReturnType<typeof vi.spyOn>;
   let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>;
-  let mockAnchor: HTMLElement & { click: () => void };
+  let mockAnchor: HTMLAnchorElement;
 
   beforeEach(() => {
-    mockAnchor = {
-      href: "",
-      download: "",
-      click: vi.fn(),
-      // Add any other properties as needed for a minimal mock
-    } as any;
+    mockAnchor = document.createElement("a");
+    vi.spyOn(mockAnchor, "click").mockImplementation(() => {});
 
-    createElementSpy = vi.spyOn(document, "createElement").mockReturnValue(mockAnchor as any);
-    appendChildSpy = vi.spyOn(document.body, "appendChild").mockReturnValue(mockAnchor as any);
-    removeChildSpy = vi.spyOn(document.body, "removeChild").mockReturnValue(mockAnchor as any);
+    createElementSpy = vi.spyOn(document, "createElement").mockReturnValue(mockAnchor);
+    appendChildSpy = vi.spyOn(document.body, "appendChild").mockReturnValue(mockAnchor);
+    removeChildSpy = vi.spyOn(document.body, "removeChild").mockReturnValue(mockAnchor);
     createObjectURLSpy = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock-url");
     revokeObjectURLSpy = vi.spyOn(URL, "revokeObjectURL").mockReturnValue();
   });

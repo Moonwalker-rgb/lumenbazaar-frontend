@@ -1,7 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+
+import type * as Generated from "./client.generated";
 
 describe("Backend Pin Manifest", () => {
   it("manifest exists and has required fields", () => {
@@ -68,10 +70,7 @@ describe("Backend Pin Manifest", () => {
   });
 
   it("generated client file has auto-generated header", () => {
-    const generatedRaw = fs.readFileSync(
-      "src/services/api/client.generated.ts",
-      "utf8"
-    );
+    const generatedRaw = fs.readFileSync("src/services/api/client.generated.ts", "utf8");
 
     expect(generatedRaw).toContain("AUTO-GENERATED FILE");
     expect(generatedRaw).toContain("DO NOT EDIT");
@@ -82,10 +81,7 @@ describe("Backend Pin Manifest", () => {
     const manifestRaw = fs.readFileSync("backend-pin.json", "utf8");
     const manifest = JSON.parse(manifestRaw);
 
-    const generatedRaw = fs.readFileSync(
-      "src/services/api/client.generated.ts",
-      "utf8"
-    );
+    const generatedRaw = fs.readFileSync("src/services/api/client.generated.ts", "utf8");
 
     expect(generatedRaw).toContain(manifest.backend.commitSha);
   });
@@ -94,20 +90,23 @@ describe("Backend Pin Manifest", () => {
     const manifestRaw = fs.readFileSync("backend-pin.json", "utf8");
     const manifest = JSON.parse(manifestRaw);
 
-    const generatedRaw = fs.readFileSync(
-      "src/services/api/client.generated.ts",
-      "utf8"
-    );
+    const generatedRaw = fs.readFileSync("src/services/api/client.generated.ts", "utf8");
 
     expect(generatedRaw).toContain(manifest.artifact.sha256);
   });
 
   it("generated client exports expected types", () => {
-    // Import and verify key types are exported
-    const { Health, Version, Readiness, Resource, Seller, Settlement, Receipt } =
-      require("./client.generated");
+    // Schemas are type-only exports, so verify their presence and shape at compile time.
+    type ExpectedSchemas = {
+      Health: { ok: boolean; service: string };
+      Version: { service: string; version: string };
+      Readiness: { ok: boolean; capabilities: { exact: boolean; upto: boolean } };
+      Resource: { id: string; name: string };
+      Seller: { id: string; walletAddress: string };
+      Settlement: { success: boolean; transaction: string };
+      Receipt: { id: string; status: string };
+    };
 
-    expect(typeof Health).toBe("function" || "object"); // Types are not functions at runtime, but check they're defined
-    // In practice, these assertions run at compile-time via expectTypeOf in the alignment test
+    expectTypeOf<Generated.components["schemas"]>().toMatchTypeOf<ExpectedSchemas>();
   });
 });

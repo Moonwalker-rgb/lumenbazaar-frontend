@@ -1,29 +1,34 @@
 # Column Chooser Feature - Validation & Testing Guide
 
 ## Feature Overview
+
 This document provides comprehensive validation procedures for the responsive table column chooser feature implemented in LumenBazaar frontend (Issue #95).
 
 ## Implementation Summary
 
 ### New Files Created
+
 1. **`src/services/column-preferences.ts`** - Core service for managing column visibility preferences in localStorage
 2. **`src/services/column-preferences.test.ts`** - Unit tests for column preferences (35+ test cases)
 3. **`src/components/ui/column-chooser.tsx`** - Reusable column visibility dropdown component
 4. **`src/components/ui/column-chooser.test.tsx`** - Component tests (40+ test cases)
 
 ### Modified Files
+
 1. **`src/components/operators/operator-health-table.tsx`** - Integrated ColumnChooser with 4 columns (Service, Status, Last check, Reason)
 2. **`src/components/transactions/transaction-dashboard.tsx`** - Integrated ColumnChooser with 8 columns (Attempt, Seller, Resource, Status, Amount, Created, Failure, Evidence)
 
 ## Key Features Implemented
 
 ### ✅ Required-Column Safeguards
+
 - **Operator Health Table**: Service and Status columns are always visible and cannot be hidden
 - **Transaction Dashboard**: Attempt and Status columns are always visible and cannot be hidden
 - UI prevents user interaction with required columns (disabled state, visual feedback)
 - Backend validation throws errors if required columns are attempted to be hidden
 
 ### ✅ Local Preferences (localStorage)
+
 - Preferences stored under key: `lumenbazaar.frontend.column-preferences.v1`
 - Persists across browser sessions
 - Automatically loads on component mount
@@ -31,6 +36,7 @@ This document provides comprehensive validation procedures for the responsive ta
 - Separate preferences for each table (by `tableId`)
 
 ### ✅ Accessibility Features
+
 - Full ARIA support: `aria-haspopup`, `aria-expanded`, `aria-checked`, `role="menu"`
 - Keyboard navigation: Escape to close menu, Tab/Shift+Tab to navigate
 - Focus management: Focus returns to button when menu closes
@@ -39,15 +45,17 @@ This document provides comprehensive validation procedures for the responsive ta
 - Color contrast compliance: All text meets WCAG AA standards
 
 ### ✅ Responsive Design
+
 - **Desktop**: Full menu with all options visible
 - **Mobile (< 640px)**: Menu positioned and sized appropriately
-- **Trigger Button**: 
+- **Trigger Button**:
   - Desktop: Displays "Columns" + count badge (if hidden)
   - Mobile: Same, with responsive spacing using Tailwind `sm:` breakpoints
 - **Menu Positioning**: Absolutely positioned (right-aligned) to stay within viewport
 - **Touch-Friendly**: 44px minimum touch target size (Tailwind `min-h-9`)
 
 ### ✅ Mobile Keyboard Behavior
+
 - **Click Outside Detection**: Menu closes when clicking outside (works on touch devices via mousedown)
 - **Escape Key**: Menu closes and focus returns to button
 - **Tab Navigation**: Users can tab through menu items on keyboard
@@ -59,6 +67,7 @@ This document provides comprehensive validation procedures for the responsive ta
 ### 1. Desktop Behavior Testing
 
 #### Operator Health Table (`/operators`)
+
 ```
 Steps:
 1. Open page in desktop browser (Chrome, Firefox, Safari, Edge)
@@ -88,6 +97,7 @@ Expected Results:
 ```
 
 #### Transaction Dashboard (`/transactions`)
+
 ```
 Steps:
 1. Open page in desktop browser
@@ -126,6 +136,7 @@ Expected Results:
 ### 2. Mobile Behavior Testing
 
 #### Device Testing (iPhone SE 375px, iPhone 12 390px, Pixel 6 412px)
+
 ```
 Steps:
 1. Open `/operators` on mobile device or browser devtools mobile emulation
@@ -156,6 +167,7 @@ Expected Results:
 ```
 
 #### Keyboard Navigation on Mobile
+
 ```
 Steps:
 1. Open page on mobile with external keyboard connected (iPad with keyboard)
@@ -194,6 +206,7 @@ For each browser, verify:
 ### 4. Responsive Width Testing
 
 #### Tablet (iPad, 768px width)
+
 ```
 Expected Behavior:
 - Menu button visible and functional
@@ -203,6 +216,7 @@ Expected Behavior:
 ```
 
 #### Large Desktop (1920px+ width)
+
 ```
 Expected Behavior:
 - All columns can potentially be visible
@@ -214,6 +228,7 @@ Expected Behavior:
 ### 5. Edge Cases
 
 #### localStorage Unavailability
+
 ```
 Scenario: Private browsing mode (no localStorage)
 Expected: Feature still works, preferences not persisted
@@ -223,6 +238,7 @@ Expected: Feature still works, preferences not persisted
 ```
 
 #### Rapid Toggle Clicks
+
 ```
 Scenario: User rapidly clicks column checkboxes
 Expected:
@@ -232,6 +248,7 @@ Expected:
 ```
 
 #### Manual localStorage Corruption
+
 ```
 Scenario: localStorage contains invalid JSON or schema
 Expected:
@@ -241,6 +258,7 @@ Expected:
 ```
 
 #### Very Long Column Names
+
 ```
 Scenario: Column labels are very long
 Expected:
@@ -252,33 +270,39 @@ Expected:
 ## Performance Validation
 
 ### 1. Initial Load Time
+
 - Measure: Time from component mount to menu appearing
 - Expected: <100ms
 - Testing: Use browser DevTools Performance tab
 
 ### 2. Toggle Response Time
+
 - Measure: Time from checkbox click to column disappearing
 - Expected: <50ms
 - Testing: Visual inspection + DevTools Performance
 
 ### 3. localStorage Access
+
 - Measure: Time to read/write preferences
 - Expected: <10ms (synchronous)
 - Testing: DevTools Performance tab
 
 ### 4. Memory Usage
+
 - No memory leaks when toggling columns repeatedly
 - Cleanup of event listeners on component unmount
 
 ## Accessibility Validation (WCAG 2.1 AA)
 
 ### Automated Testing
+
 ```bash
 # Run Playwright accessibility tests
 pnpm test:e2e:a11y
 ```
 
 ### Manual Accessibility Testing
+
 1. **Screen Reader (NVDA, JAWS, VoiceOver)**
    - Menu button properly announced
    - Column options read with checked/unchecked state
@@ -319,7 +343,9 @@ Before considering implementation complete, verify:
 ## Documentation
 
 ### User Documentation
+
 Users should understand:
+
 1. How to click the "Columns" button to open the menu
 2. That required columns (marked "Required") cannot be hidden
 3. That their preferences are saved automatically
@@ -327,7 +353,9 @@ Users should understand:
 5. That preferences are stored locally per browser
 
 ### Developer Documentation
+
 Developers should understand:
+
 1. How to add column chooser to new tables
 2. How the localStorage schema works
 3. How to define required vs optional columns

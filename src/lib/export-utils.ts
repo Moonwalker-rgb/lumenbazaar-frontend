@@ -61,11 +61,7 @@ export function downloadFile(
  * @param timestamp Optional custom timestamp for file naming
  * @throws If content is empty or format is invalid
  */
-export function triggerExport(
-  format: "json" | "csv",
-  content: string,
-  timestamp?: Date
-): void {
+export function triggerExport(format: "json" | "csv", content: string, timestamp?: Date): void {
   if (!content || content.trim().length === 0) {
     throw new Error("Cannot export empty content");
   }

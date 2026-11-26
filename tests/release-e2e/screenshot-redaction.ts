@@ -16,7 +16,8 @@ const CONTRACT_ADDRESS_PATTERN = /C[A-Z0-9]{55}/g;
 const SEED_PHRASE_PATTERN = /(?:[a-z]+\s){11}[a-z]+|(?:[a-z]+\s){23}[a-z]+/gi;
 
 // Private key patterns (base64-like or hex strings longer than 40 chars)
-const PRIVATE_KEY_PATTERN = /(?:priv(?:ate)?[\s_-]?key|secret[\s_-]?key)[:\s=]+[A-Za-z0-9+/=]{40,}/gi;
+const PRIVATE_KEY_PATTERN =
+  /(?:priv(?:ate)?[\s_-]?key|secret[\s_-]?key)[:\s=]+[A-Za-z0-9+/=]{40,}/gi;
 
 // XDR-like encoded strings (start with eyJ for base64)
 const XDR_PATTERN = /eyJ[A-Za-z0-9+/=]{50,}/g;
@@ -59,7 +60,7 @@ const REDACTION_RULES = [
  */
 export async function redactSensitiveDataInDOM(page: Page): Promise<void> {
   await page.evaluate(() => {
-    const redactElement = (el: Element) => {
+    const redactElement = (el: Node) => {
       if (el.nodeType === Node.TEXT_NODE) {
         let text = el.textContent || "";
         let modified = false;
@@ -102,7 +103,7 @@ export async function redactSensitiveDataInDOM(page: Page): Promise<void> {
           if (child.nodeType === Node.TEXT_NODE) {
             redactElement(child);
           } else if (child.nodeType === Node.ELEMENT_NODE) {
-            redactElement(child as Element);
+            redactElement(child);
           }
           child = next;
         }
@@ -113,17 +114,13 @@ export async function redactSensitiveDataInDOM(page: Page): Promise<void> {
     redactElement(document.body);
 
     // Redact shadow DOM if present
-    const walker = document.createTreeWalker(
-      document.body,
-      NodeFilter.SHOW_ELEMENT,
-      null
-    );
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT, null);
 
     let node;
     while ((node = walker.nextNode())) {
       const el = node as Element;
       if (el.shadowRoot) {
-        redactElement(el.shadowRoot as unknown as Element);
+        redactElement(el.shadowRoot);
       }
     }
   });
@@ -155,9 +152,7 @@ export function redactMetadata(metadata: Record<string, string>): Record<string,
     let redactedValue = value;
 
     // Redact sensitive keys entirely
-    if (
-      /secret|private|seed|key|token|credential/i.test(key)
-    ) {
+    if (/secret|private|seed|key|token|credential/i.test(key)) {
       redactedValue = "[REDACTED]";
     } else {
       // Redact sensitive patterns in values

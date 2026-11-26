@@ -508,7 +508,9 @@ async function callPaidResource(
   fetchImpl: typeof fetch,
   timeoutMs: number
 ) {
-  const headers = new Headers(challenge.request.headers.map(([name, value]) => [name, value]));
+  const headers = new Headers(
+    challenge.request.headers.map(([name, value]): [string, string] => [name, value])
+  );
   headers.set("PAYMENT-SIGNATURE", signatureHeader);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);

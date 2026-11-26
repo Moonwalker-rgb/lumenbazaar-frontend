@@ -186,7 +186,7 @@ describe("Event Allowlist", () => {
     it("should have valid duration_ms bounds", () => {
       expect(FIELD_BOUNDS.duration_ms).toHaveProperty("min", 0);
       expect(FIELD_BOUNDS.duration_ms).toHaveProperty("max");
-      expect((FIELD_BOUNDS.duration_ms as any).max).toBeGreaterThan(0);
+      expect(FIELD_BOUNDS.duration_ms.max).toBeGreaterThan(0);
     });
 
     it("should have valid assetCode bounds", () => {

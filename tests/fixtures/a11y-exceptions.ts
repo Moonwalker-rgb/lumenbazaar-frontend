@@ -55,10 +55,10 @@ export function validateExceptions(): {
   errors: string[];
 } {
   const errors: string[] = [];
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0]!;
 
   for (let i = 0; i < A11Y_EXCEPTIONS.length; i++) {
-    const exc = A11Y_EXCEPTIONS[i];
+    const exc = A11Y_EXCEPTIONS[i]!;
 
     // Check all required fields
     if (!exc.ruleId) errors.push(`Exception ${i}: missing ruleId`);
@@ -70,7 +70,9 @@ export function validateExceptions(): {
 
     // Check expiry date is in future
     if (exc.expiryDate && exc.expiryDate < today) {
-      errors.push(`Exception ${i} (${exc.ruleId} on ${exc.route}): expired (${exc.expiryDate} < ${today})`);
+      errors.push(
+        `Exception ${i} (${exc.ruleId} on ${exc.route}): expired (${exc.expiryDate} < ${today})`
+      );
     }
 
     // Check date format is ISO 8601

@@ -39,6 +39,7 @@ type LifecycleDialog = {
 export function SellerResourceList({ sellerId = "seller_atlas_weather" }: { sellerId?: string }) {
   const mode = loadRuntimeConfig().environment;
   const demo = isDemoMode(mode);
+  const queryClient = useQueryClient();
   const { canMutate } = useSellerSession();
   const [status, setStatus] = useState<ResourceStatus | "all">("all");
   const [dialog, setDialog] = useState<LifecycleDialog | null>(null);
@@ -223,7 +224,6 @@ export function SellerResourceList({ sellerId = "seller_atlas_weather" }: { sell
                   <tbody className="divide-y divide-slate-200">
                     {resources.map((resource) => (
                       <ResourceRow
-                        disabled={disabledIds.has(resource.id)}
                         editable={demo && canMutate}
                         key={resource.id}
                         onDisable={() => openDialog("disable", resource)}

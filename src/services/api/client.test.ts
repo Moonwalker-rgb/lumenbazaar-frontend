@@ -281,7 +281,7 @@ describe("LumenBazaarApiClient", () => {
               receiptId: "receipt_1",
               settlementId: "settlement_1",
               status: "confirmed",
-              transactionHash: "tx_1"
+              transactionHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             }
           },
           network: "stellar:testnet",
@@ -375,7 +375,7 @@ describe("LumenBazaarApiClient", () => {
               assets: [
                 {
                   code: "USDC",
-                  contractId: "CASSET",
+                  contractId: "CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS",
                   decimals: 7,
                   issuer: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"
                 }
@@ -440,7 +440,7 @@ function resourcePayload() {
 function paymentPayload() {
   const requirements = {
     amount: "500000",
-    asset: "CASSET",
+    asset: "CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS",
     extra: {
       assetCode: "USDC"
     },

@@ -143,22 +143,15 @@ export const assetMetadataSchema = z.object({
     .max(7, "Decimals must not exceed 7"),
   issuer: z
     .string()
-    .refine(
-      isValidStellarAccountAddress,
-      "Issuer must be a valid Stellar account address"
-    )
+    .refine(isValidStellarAccountAddress, "Issuer must be a valid Stellar account address")
     .optional(),
-  symbol: z
-    .string()
-    .refine(isValidAssetCode, "Symbol must be 1-12 alphanumeric characters")
+  symbol: z.string().refine(isValidAssetCode, "Symbol must be 1-12 alphanumeric characters")
 });
 
 export type AssetMetadata = z.infer<typeof assetMetadataSchema>;
 
 const supportedAssetSchema = z.object({
-  code: z
-    .string()
-    .refine(isValidAssetCode, "Asset code must be 1-12 alphanumeric characters"),
+  code: z.string().refine(isValidAssetCode, "Asset code must be 1-12 alphanumeric characters"),
   contractId: z
     .string()
     .refine(
@@ -169,10 +162,7 @@ const supportedAssetSchema = z.object({
   decimals: z.number().int().min(0).max(7),
   issuer: z
     .string()
-    .refine(
-      isValidStellarAccountAddress,
-      "Issuer must be a valid Stellar account address"
-    )
+    .refine(isValidStellarAccountAddress, "Issuer must be a valid Stellar account address")
 });
 
 export const networksSchema = z.object({
@@ -357,7 +347,9 @@ export const exactPaymentRequirementsSchema = z
   .object({
     amount: z
       .string()
-      .regex(/^[1-9]\d*$/)
+      .regex(/^[1-9]\d*$/, {
+        message: "Amount must be a positive integer without leading zeros"
+      })
       .refine(
         (value) => isValidAtomicAmount(value),
         "Amount must be a positive integer without leading zeros"
@@ -474,11 +466,9 @@ export type SettlementRequest = z.infer<typeof settlementRequestSchema>;
  * Stellar transaction hashes are always 64 hexadecimal characters (SHA-256).
  * This pattern rejects synthetic identifiers like "upto-*" or other non-hex values.
  */
-const stellarTransactionHashSchema = z
-  .string()
-  .regex(/^[a-f0-9]{64}$/i, {
-    message: "Transaction hash must be a 64-character hexadecimal string (Stellar transaction format)"
-  });
+const stellarTransactionHashSchema = z.string().regex(/^[a-f0-9]{64}$/i, {
+  message: "Transaction hash must be a 64-character hexadecimal string (Stellar transaction format)"
+});
 
 export const settlementSchema = z.object({
   amount: z

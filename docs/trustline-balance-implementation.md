@@ -8,18 +8,18 @@ This feature adds preflight validation to detect missing trustlines and insuffic
 
 **Files Modified/Created:**
 
-| File | Purpose |
-|------|---------|
-| `src/services/api/schemas.ts` | Added `INSUFFICIENT_BALANCE` error code |
-| `src/services/stellar/horizon.ts` | Horizon API queries and validation |
-| `src/services/stellar/preflight.ts` | Orchestration and error handling |
-| `src/components/playground/payment-playground.tsx` | UI integration in playground |
-| `src/fixtures/stellar-accounts.ts` | Test scenarios and mocks |
-| `src/services/stellar/horizon.test.ts` | Vitest unit tests (40+ cases) |
-| `src/services/stellar/preflight.test.ts` | Vitest unit tests (60+ cases) |
-| `tests/e2e/payment-playground-preflight.spec.ts` | Playwright E2E tests (40+ cases) |
-| `docs/preflight-validation.md` | Complete documentation |
-| `docs/trustline-balance-implementation.md` | This file |
+| File                                               | Purpose                                 |
+| -------------------------------------------------- | --------------------------------------- |
+| `src/services/api/schemas.ts`                      | Added `INSUFFICIENT_BALANCE` error code |
+| `src/services/stellar/horizon.ts`                  | Horizon API queries and validation      |
+| `src/services/stellar/preflight.ts`                | Orchestration and error handling        |
+| `src/components/playground/payment-playground.tsx` | UI integration in playground            |
+| `src/fixtures/stellar-accounts.ts`                 | Test scenarios and mocks                |
+| `src/services/stellar/horizon.test.ts`             | Vitest unit tests (40+ cases)           |
+| `src/services/stellar/preflight.test.ts`           | Vitest unit tests (60+ cases)           |
+| `tests/e2e/payment-playground-preflight.spec.ts`   | Playwright E2E tests (40+ cases)        |
+| `docs/preflight-validation.md`                     | Complete documentation                  |
+| `docs/trustline-balance-implementation.md`         | This file                               |
 
 ## Key Design Decisions
 
@@ -106,6 +106,7 @@ This feature adds preflight validation to detect missing trustlines and insuffic
 ### Unit Tests (Vitest)
 
 **Coverage:**
+
 - Horizon query parsing and error handling
 - Balance comparison (including big integers)
 - Preflight orchestration
@@ -118,6 +119,7 @@ This feature adds preflight validation to detect missing trustlines and insuffic
 ### E2E Tests (Playwright)
 
 **Coverage:**
+
 - Preflight card rendering
 - Input validation
 - Error display
@@ -308,6 +310,7 @@ pnpm check
 ```
 
 Expected results:
+
 - ✓ No type errors
 - ✓ All tests pass (100+ unit, 40+ E2E)
 - ✓ No linting issues

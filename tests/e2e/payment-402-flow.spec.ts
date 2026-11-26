@@ -42,7 +42,7 @@ test.describe("Payment 402 Exact Payment Flow", () => {
       });
 
       const live402Button = page.getByRole("button", { name: /Live 402/ }).first();
-      
+
       // Click should initiate challenge request
       // Note: In demo mode, actual live resources may not be available
       // This test documents the expected flow:
@@ -55,7 +55,7 @@ test.describe("Payment 402 Exact Payment Flow", () => {
   test.describe("Wallet Authorization", () => {
     test("should display authorization card with challenge details", async ({ page }) => {
       // Setup: Assume challenge is already loaded (in real test, would mock request)
-      
+
       const authCard = page.locator("h2").filter({ hasText: "Authorization" });
       await expect(authCard).toBeVisible();
 
@@ -64,7 +64,9 @@ test.describe("Payment 402 Exact Payment Flow", () => {
       await expect(walletButton).toBeVisible();
     });
 
-    test("should display Authorize with Freighter button when challenge ready", async ({ page }) => {
+    test("should display Authorize with Freighter button when challenge ready", async ({
+      page
+    }) => {
       // This test documents the expected UI state after challenge is received:
       // 1. Challenge card shows with validation badge
       // 2. "Authorize with Freighter" button is visible and enabled
@@ -79,7 +81,6 @@ test.describe("Payment 402 Exact Payment Flow", () => {
       // 1. Authorized Account section shows with public key
       // 2. "Submit Paid Request" button becomes available
       // 3. Payment state shows "wallet-draft"
-
       // In real test with Freighter, would:
       // - Intercept Freighter wallet requests
       // - Mock wallet signing response
@@ -116,7 +117,7 @@ test.describe("Payment 402 Exact Payment Flow", () => {
     test("should send request with PAYMENT-SIGNATURE header", async ({ page, context }) => {
       // Mock to capture the paid resource request
       const capturedRequests: { headers: Record<string, string> }[] = [];
-      
+
       await context.route("**/paid-resource/**", async (route) => {
         const headers = route.request().headers();
         capturedRequests.push({ headers });
@@ -259,13 +260,15 @@ test.describe("Payment 402 Exact Payment Flow", () => {
 
     test("should not log sensitive payment data", async ({ page, context }) => {
       // Monitor console for security violations
-      let securityViolations: string[] = [];
-      
+      const securityViolations: string[] = [];
+
       page.on("console", (msg) => {
         const text = msg.text();
-        if (text.includes("PAYMENT-SIGNATURE") || 
-            text.includes("signed-auth-entry") ||
-            text.includes("signed-xdr")) {
+        if (
+          text.includes("PAYMENT-SIGNATURE") ||
+          text.includes("signed-auth-entry") ||
+          text.includes("signed-xdr")
+        ) {
           securityViolations.push(text);
         }
       });

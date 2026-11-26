@@ -144,8 +144,13 @@ export function getAvailableLocales(): string[] {
  * @returns true if timezone is valid
  */
 export function isValidTimezone(timezone: string): boolean {
+  if (!timezone || (timezone !== "UTC" && !timezone.includes("/"))) {
+    return false;
+  }
+
   try {
-    // Try to create a formatter with this timezone
+    // Intl also accepts legacy abbreviations such as "EST"; only IANA-style
+    // IDs (Area/Region, plus UTC) are exposed to users.
     new Intl.DateTimeFormat("en-US", { timeZone: timezone });
     return true;
   } catch {
@@ -159,10 +164,14 @@ export function isValidTimezone(timezone: string): boolean {
  * @returns true if locale is valid
  */
 export function isValidLocale(locale: string): boolean {
+  if (!locale) {
+    return false;
+  }
+
   try {
-    // Try to create a formatter with this locale
-    new Intl.DateTimeFormat(locale);
-    return true;
+    // Constructing a formatter with an unknown tag silently falls back to the
+    // default locale, so use supportedLocalesOf to reject unsupported tags.
+    return Intl.DateTimeFormat.supportedLocalesOf([locale]).length > 0;
   } catch {
     return false;
   }
@@ -245,8 +254,7 @@ function getTimezoneOffsetHours(date: Date, timezone: string): number {
     });
 
     const parts = formatter.formatToParts(date);
-    const getVal = (type: string) =>
-      parseInt(parts.find((p) => p.type === type)?.value ?? "0", 10);
+    const getVal = (type: string) => parseInt(parts.find((p) => p.type === type)?.value ?? "0", 10);
 
     const year = getVal("year");
     const month = getVal("month");
@@ -256,15 +264,21 @@ function getTimezoneOffsetHours(date: Date, timezone: string): number {
     const second = getVal("second");
 
     // Create local date in target timezone
-    const localDate = new Date(
-      Date.UTC(year, month - 1, day, hour, minute, second)
-    );
+    const localDate = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
 
-    // Calculate offset: difference between UTC and local time
-    const utcTime = date.getTime();
-    const localTime = localDate.getTime();
-    const offsetMs = utcTime - localTime;
-    const offsetHours = offsetMs / (1000 * 60 * 60);
+    // Compare whole seconds: the source timestamp may carry milliseconds that
+    // are intentionally omitted from the formatted parts.
+    const utcTime = Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      date.getUTCHours(),
+      date.getUTCMinutes(),
+      date.getUTCSeconds()
+    );
+    const offsetMs = utcTime - localDate.getTime();
+    // Timezone offsets are whole minutes; round away any sub-minute noise.
+    const offsetHours = Math.round(offsetMs / (1000 * 60)) / 60;
 
     return -offsetHours;
   } catch {
@@ -410,11 +424,7 @@ export function formatDateTime(
  * );
  * // "Nov 19, 2024"
  */
-export function formatDate(
-  timestamp: string,
-  timezone: string,
-  locale: string
-): string {
+export function formatDate(timestamp: string, timezone: string, locale: string): string {
   return formatDateTime(timestamp, timezone, locale, false, false);
 }
 

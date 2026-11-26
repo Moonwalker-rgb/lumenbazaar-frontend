@@ -24,9 +24,7 @@ export function useDateTimeFormatter() {
   const context = useContext(DateTimeFormatterContext);
 
   if (!context) {
-    throw new Error(
-      "useDateTimeFormatter must be used within a DateTimeFormatterProvider"
-    );
+    throw new Error("useDateTimeFormatter must be used within a DateTimeFormatterProvider");
   }
 
   return context;

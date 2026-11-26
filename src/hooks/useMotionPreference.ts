@@ -20,8 +20,15 @@ export function useMotionPreference() {
 
     // Detect the actual system preference
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-    setIsHydrated(true);
+    let active = true;
+
+    // Defer state updates so the effect does not synchronously trigger a
+    // cascading render, while keeping the server/client markup identical.
+    queueMicrotask(() => {
+      if (!active) return;
+      setPrefersReducedMotion(mediaQuery.matches);
+      setIsHydrated(true);
+    });
 
     // Listen for changes to the preference (e.g., user changes system settings)
     const handleChange = (e: MediaQueryListEvent) => {
@@ -32,6 +39,7 @@ export function useMotionPreference() {
     mediaQuery.addEventListener("change", handleChange);
 
     return () => {
+      active = false;
       mediaQuery.removeEventListener("change", handleChange);
     };
   }, []);

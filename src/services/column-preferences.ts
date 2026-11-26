@@ -172,7 +172,8 @@ export function toggleColumnVisibility(
     throw new Error(`Cannot hide required column: ${columnId}`);
   }
 
-  const preference = getColumnPreference(tableId, storage) ||
+  const preference =
+    getColumnPreference(tableId, storage) ||
     initializeColumnPreference(tableId, allColumnIds, requiredColumns);
 
   const visibleColumns = preference.visibleColumns.includes(columnId)

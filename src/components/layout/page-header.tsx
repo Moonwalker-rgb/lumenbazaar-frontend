@@ -6,7 +6,7 @@ type PageHeaderProps = {
 
 /**
  * PageHeader: Main page heading with title and description.
- * 
+ *
  * The h1 element is set with tabindex="-1" to make it focusable for
  * accessibility purposes. This allows focus to be restored to the
  * page heading after route changes or modal dismissals without

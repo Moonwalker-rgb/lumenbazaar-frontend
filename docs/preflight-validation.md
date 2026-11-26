@@ -10,6 +10,7 @@ Before a user signs a payment transaction, the frontend validates that the payer
 2. **Has sufficient balance** — The account holds enough of the required asset to complete the payment
 
 These checks are **distinct and unambiguous**:
+
 - **Missing trustline** → `TRUSTLINE_REQUIRED` error
 - **Insufficient balance** → `INSUFFICIENT_BALANCE` error
 
@@ -94,17 +95,20 @@ The payment playground displays a dedicated "Preflight Check" card where users c
 **Condition:** Account has no balance entry for the asset.
 
 **User Action:**
+
 - Establish trustline with asset issuer (via wallet UI or on-chain operation)
 - Re-check account in preflight validator
 - Return to authorization and sign payment
 
 **Message Format:**
+
 ```
 Account does not have a trustline for {assetCode} ({assetIssuer}).
 Please establish a trustline before attempting payment.
 ```
 
 **Error Details:**
+
 ```json
 {
   "code": "TRUSTLINE_REQUIRED",
@@ -118,16 +122,19 @@ Please establish a trustline before attempting payment.
 **Condition:** Account has trustline but balance is less than required amount.
 
 **User Action:**
+
 - Acquire more of the required asset (via exchange, transfer, or airdrop)
 - Re-check account in preflight validator
 - Return to authorization and sign payment
 
 **Message Format:**
+
 ```
 Insufficient balance. Required: {requiredAmount}, Available: {currentBalance}
 ```
 
 **Error Details:**
+
 ```json
 {
   "code": "INSUFFICIENT_BALANCE",
@@ -142,18 +149,21 @@ Insufficient balance. Required: {requiredAmount}, Available: {currentBalance}
 **Condition:** Account does not exist on the specified network.
 
 **User Action:**
+
 - Verify account address is correct
 - Ensure account has been initialized (via lumen funding)
 - Use correct network (testnet vs. pubnet)
 - Re-check account
 
 **Message Format:**
+
 ```
 Account {publicKey} not found on {network}.
 Please ensure the account has been initialized.
 ```
 
 **Error Details:**
+
 ```json
 {
   "code": "ACCOUNT_NOT_FOUND",
@@ -166,11 +176,13 @@ Please ensure the account has been initialized.
 **Condition:** Horizon API is unreachable or returns unexpected response.
 
 **User Action:**
+
 - Verify internet connectivity
 - Check Horizon API status (https://stellar.org/status for pubnet)
 - Retry preflight check
 
 **Message Format:**
+
 ```
 Network error during preflight check: {specificError}
 ```
@@ -180,17 +192,20 @@ Network error during preflight check: {specificError}
 **Condition:** Resource configuration has invalid asset code or issuer.
 
 **Causes:**
+
 - Asset code longer than 12 characters
 - Asset code is empty string for non-native asset
 - Asset issuer is not a valid Stellar address
 - Required amount is not a positive integer
 
 **Message Format:**
+
 ```
 {specificValidationError}
 ```
 
 **Examples:**
+
 - "Asset code must not exceed 12 characters"
 - "Asset issuer is required for non-native assets"
 - "Asset issuer must be a valid Stellar address"
@@ -201,6 +216,7 @@ Network error during preflight check: {specificError}
 ### Unit Tests (`src/services/stellar/horizon.test.ts`)
 
 Tests for Horizon query layer:
+
 - Account info parsing and normalization
 - Balance detection and comparison
 - Error handling (404, 500, network failures)
@@ -210,6 +226,7 @@ Tests for Horizon query layer:
 ### Unit Tests (`src/services/stellar/preflight.test.ts`)
 
 Tests for preflight orchestration:
+
 - Complete validation workflow
 - Each error type (trustline, balance, account not found, network, invalid config)
 - Validation of asset configuration
@@ -219,6 +236,7 @@ Tests for preflight orchestration:
 ### E2E Tests (`tests/e2e/payment-playground-preflight.spec.ts`)
 
 Tests for UI integration:
+
 - Preflight check card rendering
 - Input validation and interaction
 - Error display and styling
@@ -230,6 +248,7 @@ Tests for UI integration:
 ### Test Fixtures (`src/fixtures/stellar-accounts.ts`)
 
 Synthetic testnet account scenarios:
+
 1. **sufficientBalance** — Account with USDC trustline and balance > required
 2. **insufficientBalance** — Account with USDC trustline but balance < required
 3. **noTrustline** — Account with no USDC trustline (XLM only)
@@ -238,6 +257,7 @@ Synthetic testnet account scenarios:
 6. **insufficientXLM** — Validation of native XLM with insufficient balance
 
 Mock implementations:
+
 - `createScenarioMockFetch()` — Interceptor for all test scenarios
 - `createMockHorizonFetch(scenarios)` — Custom scenario mocks
 - Response builders for 200, 404, 500 status codes
@@ -270,11 +290,13 @@ Mock implementations:
 The preflight checks are **optional** in the current implementation but **recommended** before calling `verifyPayment()`.
 
 **Current flow (without preflight):**
+
 1. User enters public key → builds payment payload → signs in wallet → calls `verifyPayment()`
 2. Backend validates payment → returns success or error
 3. If backend returns `TRUSTLINE_REQUIRED` or amount mismatch → payment fails
 
 **Recommended flow (with preflight):**
+
 1. User enters public key → preflight check validates account state
 2. If check succeeds → user builds payment payload → signs in wallet → calls `verifyPayment()`
 3. If check fails → user adjusts account (establishes trustline or acquires asset) → retries

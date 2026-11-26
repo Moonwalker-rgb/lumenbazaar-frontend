@@ -7,6 +7,12 @@ import {
   handleRouteChangeFocus
 } from "./focus-management";
 
+function waitForNextFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => resolve());
+  });
+}
+
 describe("Focus Management", () => {
   let container: HTMLDivElement;
 
@@ -78,6 +84,7 @@ describe("Focus Management", () => {
       const h1 = document.createElement("h1");
       h1.textContent = "Page Title";
       container.appendChild(h1);
+      h1.tabIndex = -1;
       h1.focus();
 
       const result = focusHeadingWithoutScroll({ force: false });
@@ -190,29 +197,26 @@ describe("Focus Management", () => {
       const focusSpy = vi.spyOn(h1, "focus");
       manageFocusAfterOverlay(null);
 
-      expect(focusSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ preventScroll: true })
-      );
+      expect(focusSpy).toHaveBeenCalledWith(expect.objectContaining({ preventScroll: true }));
     });
   });
 
   describe("handleRouteChangeFocus", () => {
-    it("focuses heading after route change", (done) => {
+    it("focuses heading after route change", async () => {
       const h1 = document.createElement("h1");
       h1.textContent = "New Page";
       container.appendChild(h1);
 
       handleRouteChangeFocus();
 
-      // Wait for requestAnimationFrame
-      setTimeout(() => {
-        expect(document.activeElement).toBe(h1);
-        expect(h1.getAttribute("tabindex")).toBe("-1");
-        done();
-      }, 0);
+      // Wait for the requestAnimationFrame scheduled by handleRouteChangeFocus
+      await waitForNextFrame();
+
+      expect(document.activeElement).toBe(h1);
+      expect(h1.getAttribute("tabindex")).toBe("-1");
     });
 
-    it("forces focus on heading", (done) => {
+    it("forces focus on heading", async () => {
       const h1 = document.createElement("h1");
       h1.textContent = "New Page";
       container.appendChild(h1);
@@ -220,25 +224,21 @@ describe("Focus Management", () => {
 
       handleRouteChangeFocus();
 
-      setTimeout(() => {
-        expect(document.activeElement).toBe(h1);
-        done();
-      }, 0);
+      await waitForNextFrame();
+
+      expect(document.activeElement).toBe(h1);
     });
 
-    it("prevents scroll during navigation", (done) => {
+    it("prevents scroll during navigation", async () => {
       const h1 = document.createElement("h1");
       container.appendChild(h1);
 
       const focusSpy = vi.spyOn(h1, "focus");
       handleRouteChangeFocus({ preventScroll: true });
 
-      setTimeout(() => {
-        expect(focusSpy).toHaveBeenCalledWith(
-          expect.objectContaining({ preventScroll: true })
-        );
-        done();
-      }, 0);
+      await waitForNextFrame();
+
+      expect(focusSpy).toHaveBeenCalledWith(expect.objectContaining({ preventScroll: true }));
     });
 
     it("returns false in non-browser environment", () => {

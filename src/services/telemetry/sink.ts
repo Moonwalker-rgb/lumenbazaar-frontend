@@ -52,7 +52,7 @@ export class RemoteSink implements TelemetrySink {
 
   send(event: TelemetryEvent): void {
     this.queue.push(event);
-    
+
     // Flush immediately if queue grows large
     if (this.queue.length >= 10) {
       this.flush();
@@ -71,12 +71,12 @@ export class RemoteSink implements TelemetrySink {
     }
 
     const events = this.queue.splice(0);
-    
+
     try {
       // Placeholder: actual implementation would POST events to endpoint
       // eslint-disable-next-line no-console
       console.debug(`[RemoteSink] would send ${events.length} events to ${this.endpoint}`);
-      
+
       // In a real implementation:
       // const response = await fetch(this.endpoint, {
       //   method: 'POST',

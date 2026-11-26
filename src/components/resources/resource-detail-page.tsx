@@ -19,10 +19,10 @@ function isResourceDetailError(error: unknown): error is ResourceDetailError {
     error !== null &&
     typeof error === "object" &&
     "code" in error &&
-    ("code" === "NOT_FOUND" ||
-      "code" === "SERVICE_UNAVAILABLE" ||
-      "code" === "INVALID_RESPONSE" ||
-      "code" === "UNKNOWN_ERROR")
+    (error.code === "NOT_FOUND" ||
+      error.code === "SERVICE_UNAVAILABLE" ||
+      error.code === "INVALID_RESPONSE" ||
+      error.code === "UNKNOWN_ERROR")
   );
 }
 

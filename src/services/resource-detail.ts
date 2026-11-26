@@ -1,4 +1,4 @@
-import { apiClient, type ApiClientError, type LumenBazaarApiClient } from "@/services/api/client";
+import { apiClient, ApiClientError, type LumenBazaarApiClient } from "@/services/api/client";
 import type { Receipt, Resource, ResourcePaymentSummary, Seller } from "@/services/api/schemas";
 import { isDemoMode, type RuntimeEnvironment } from "@/config/runtime";
 
@@ -46,8 +46,11 @@ export async function loadResourceDetail(
 
     if (resource === undefined) {
       throw normalizeResourceDetailError(
-        new Error("RESOURCE_NOT_FOUND"),
-        undefined
+        new ApiClientError({
+          code: "RESOURCE_NOT_FOUND",
+          message: `Demo resource ${resourceId} was not found.`,
+          status: 404
+        })
       );
     }
 
@@ -70,7 +73,10 @@ export async function loadResourceDetail(
       source: "api"
     };
   } catch (error) {
-    throw normalizeResourceDetailError(error, isApiClientError(error) ? error.requestId : undefined);
+    throw normalizeResourceDetailError(
+      error,
+      isApiClientError(error) ? error.requestId : undefined
+    );
   }
 }
 
@@ -78,10 +84,7 @@ export async function loadResourceDetail(
  * Normalizes API errors to typed ResourceDetailError.
  * Distinguishes between 404 (not found), 503 (service unavailable), and other errors.
  */
-function normalizeResourceDetailError(
-  error: unknown,
-  requestId?: string
-): ResourceDetailError {
+function normalizeResourceDetailError(error: unknown, requestId?: string): ResourceDetailError {
   // Check if it's an ApiClientError with specific codes
   if (isApiClientError(error)) {
     if (error.code === "RESOURCE_NOT_FOUND" || error.status === 404) {

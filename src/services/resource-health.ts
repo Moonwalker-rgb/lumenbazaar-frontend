@@ -243,13 +243,7 @@ function formatTimestamp(value: string | null): string {
 
   try {
     // Use default timezone and locale for service-level formatting
-    return formatDateTime(
-      value,
-      getDefaultTimezone(),
-      getDefaultLocale(),
-      true,
-      true
-    );
+    return formatDateTime(value, getDefaultTimezone(), getDefaultLocale(), true, true);
   } catch {
     // Fallback to basic locale string if formatter fails
     return new Date(value).toLocaleString();
@@ -266,13 +260,7 @@ export function formatTimestampWithDSTInfo(value: string | null): string {
   if (value === null) return "unknown";
 
   try {
-    const formatted = formatDateTime(
-      value,
-      getDefaultTimezone(),
-      getDefaultLocale(),
-      true,
-      true
-    );
+    const formatted = formatDateTime(value, getDefaultTimezone(), getDefaultLocale(), true, true);
     return formatted;
   } catch {
     return new Date(value).toLocaleString();

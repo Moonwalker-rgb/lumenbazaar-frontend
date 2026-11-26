@@ -293,8 +293,9 @@ viewports.forEach(({ name, width, height }) => {
       page.on("request", async (request) => {
         if (request.url().includes("challenge")) {
           const response = await request.response();
-          if (response?.headers()["payment-required"]) {
-            firstChallenge = response.headers()["payment-required"];
+          const challenge = response?.headers()["payment-required"];
+          if (challenge) {
+            firstChallenge = challenge;
           }
         }
       });
@@ -377,9 +378,11 @@ viewports.forEach(({ name, width, height }) => {
       page.on("request", async (request) => {
         if (request.url().includes("verify") || request.url().includes("settle")) {
           const response = await request.response();
-          const body = response?.json();
-          if (body?.extra?.lumenbazaar?.correlationId) {
-            const id = body.extra.lumenbazaar.correlationId;
+          const body = (await response?.json()) as
+            | { extra?: { lumenbazaar?: { correlationId?: string } } }
+            | undefined;
+          const id = body?.extra?.lumenbazaar?.correlationId;
+          if (id) {
             correlationIds.set(id, (correlationIds.get(id) ?? 0) + 1);
           }
         }

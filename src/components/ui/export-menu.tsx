@@ -1,8 +1,10 @@
+"use client";
+
 import { Download, ChevronDown } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useMotion } from "@/hooks/motion-context";
+import { DEFAULT_MOTION_CONTEXT, useOptionalMotion } from "@/hooks/motion-context";
 
 export type ExportMenuProps = {
   onExportJSON: () => void;
@@ -26,7 +28,7 @@ export function ExportMenu({
 }: ExportMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { enableMotion } = useMotion();
+  const { enableMotion } = useOptionalMotion() ?? DEFAULT_MOTION_CONTEXT;
 
   const handleClickOutside = (e: React.MouseEvent) => {
     if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -61,7 +63,6 @@ export function ExportMenu({
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled || isLoading}
         variant="secondary"
-        size="sm"
         aria-label={tooltipLabel}
         aria-expanded={isOpen}
         aria-haspopup="menu"
@@ -70,9 +71,7 @@ export function ExportMenu({
         Export
         <ChevronDown
           className={`h-4 w-4 ${
-            enableMotion
-              ? "transition-transform duration-[var(--motion-duration-base)]"
-              : ""
+            enableMotion ? "transition-transform duration-[var(--motion-duration-base)]" : ""
           } ${isOpen ? "rotate-180" : ""}`}
           aria-hidden="true"
         />

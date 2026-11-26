@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { loadRuntimeConfig, stripTrailingSlash } from "@/config/runtime";
 import { networkIdSchema } from "@/config/networks";
-import { isValidLocale, isValidTimezone } from "@/lib/datetime-formatter";
+import { getAvailableLocales, isValidLocale, isValidTimezone } from "@/lib/datetime-formatter";
 import {
   SAVED_DISCOVERY_SEARCHES_STORAGE_KEY,
   clearSavedDiscoverySearches
@@ -26,7 +26,12 @@ const timezoneSchema = z.string().refine(isValidTimezone, "Must be a valid IANA 
  * Locale schema: validates against supported BCP 47 locale codes
  * Examples: "en-US", "de-DE", "fr-FR", "ja-JP"
  */
-const localeSchema = z.string().refine(isValidLocale, "Must be a valid BCP 47 locale code");
+const localeSchema = z
+  .string()
+  .refine(
+    (locale) => isValidLocale(locale) && getAvailableLocales().includes(locale),
+    "Must be a valid BCP 47 locale code"
+  );
 
 export const frontendSettingsSchema = z.object({
   facilitatorUrl: z.string().url(),

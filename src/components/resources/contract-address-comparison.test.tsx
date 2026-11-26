@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ContractAddressComparison } from "./contract-address-comparison";
 import type { AssetMetadata } from "@/config/networks";
@@ -14,11 +14,18 @@ describe("ContractAddressComparison", () => {
     issuer: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"
   };
 
+  function stubClipboardWriteText(writeText = vi.fn().mockResolvedValue(undefined)) {
+    // userEvent installs a getter-only clipboard stub; replace it with a configurable value.
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText }
+    });
+    return writeText;
+  }
+
   describe("rendering", () => {
     it("renders requirement contract address", () => {
-      render(
-        <ContractAddressComparison contractId={testContractId} />
-      );
+      render(<ContractAddressComparison contractId={testContractId} />);
 
       expect(screen.getByText("Payment Requirement")).toBeInTheDocument();
       expect(screen.getByText(testContractId)).toBeInTheDocument();
@@ -26,10 +33,7 @@ describe("ContractAddressComparison", () => {
 
     it("displays registry entry when provided", () => {
       render(
-        <ContractAddressComparison
-          contractId={testContractId}
-          registryEntry={testRegistryEntry}
-        />
+        <ContractAddressComparison contractId={testContractId} registryEntry={testRegistryEntry} />
       );
 
       expect(screen.getByText("Trusted Registry Entry")).toBeInTheDocument();
@@ -39,10 +43,7 @@ describe("ContractAddressComparison", () => {
 
     it("displays issuer abbreviation when present", () => {
       render(
-        <ContractAddressComparison
-          contractId={testContractId}
-          registryEntry={testRegistryEntry}
-        />
+        <ContractAddressComparison contractId={testContractId} registryEntry={testRegistryEntry} />
       );
 
       expect(screen.getByText(/issuer: GAAA/)).toBeInTheDocument();
@@ -56,33 +57,23 @@ describe("ContractAddressComparison", () => {
       };
 
       render(
-        <ContractAddressComparison
-          contractId={testContractId}
-          registryEntry={entryWithoutIssuer}
-        />
+        <ContractAddressComparison contractId={testContractId} registryEntry={entryWithoutIssuer} />
       );
 
       expect(screen.queryByText(/issuer:/)).not.toBeInTheDocument();
     });
 
     it("shows 'not in trusted registry' message when no entry provided", () => {
-      render(
-        <ContractAddressComparison contractId={testContractId} />
-      );
+      render(<ContractAddressComparison contractId={testContractId} />);
 
-      expect(
-        screen.getByText(/not in the trusted registry/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/not in the trusted registry/)).toBeInTheDocument();
     });
   });
 
   describe("match/mismatch detection", () => {
     it("shows match indicator when addresses match", () => {
       render(
-        <ContractAddressComparison
-          contractId={testContractId}
-          registryEntry={testRegistryEntry}
-        />
+        <ContractAddressComparison contractId={testContractId} registryEntry={testRegistryEntry} />
       );
 
       expect(screen.getByText(/Contract addresses match/)).toBeInTheDocument();
@@ -105,7 +96,7 @@ describe("ContractAddressComparison", () => {
 
       expect(screen.getByText(/do not match/)).toBeInTheDocument();
       expect(
-        screen.getByText(/potential lookalike: same symbol, different contract/)
+        screen.getByText(/Potential lookalike: same symbol, different contract/)
       ).toBeInTheDocument();
     });
   });
@@ -113,12 +104,9 @@ describe("ContractAddressComparison", () => {
   describe("copy to clipboard", () => {
     it("copies contract address on button click", async () => {
       const user = userEvent.setup();
-      const clipboardWriteText = vi.fn().mockResolvedValue(undefined);
-      Object.assign(navigator, { clipboard: { writeText: clipboardWriteText } });
+      const clipboardWriteText = stubClipboardWriteText();
 
-      render(
-        <ContractAddressComparison contractId={testContractId} />
-      );
+      render(<ContractAddressComparison contractId={testContractId} />);
 
       const copyButton = screen.getByLabelText("Copy contract address");
       await user.click(copyButton);
@@ -128,13 +116,9 @@ describe("ContractAddressComparison", () => {
 
     it("shows copy feedback after successful copy", async () => {
       const user = userEvent.setup();
-      Object.assign(navigator, {
-        clipboard: { writeText: vi.fn().mockResolvedValue(undefined) }
-      });
+      stubClipboardWriteText();
 
-      render(
-        <ContractAddressComparison contractId={testContractId} />
-      );
+      render(<ContractAddressComparison contractId={testContractId} />);
 
       const copyButton = screen.getByLabelText("Copy contract address");
       await user.click(copyButton);
@@ -152,9 +136,7 @@ describe("ContractAddressComparison", () => {
     });
 
     it("has accessible copy button with aria-label", () => {
-      render(
-        <ContractAddressComparison contractId={testContractId} />
-      );
+      render(<ContractAddressComparison contractId={testContractId} />);
 
       const copyButton = screen.getByLabelText("Copy contract address");
       expect(copyButton).toBeInTheDocument();
@@ -163,12 +145,9 @@ describe("ContractAddressComparison", () => {
 
     it("copy button is keyboard accessible", async () => {
       const user = userEvent.setup();
-      const clipboardWriteText = vi.fn().mockResolvedValue(undefined);
-      Object.assign(navigator, { clipboard: { writeText: clipboardWriteText } });
+      const clipboardWriteText = stubClipboardWriteText();
 
-      render(
-        <ContractAddressComparison contractId={testContractId} />
-      );
+      render(<ContractAddressComparison contractId={testContractId} />);
 
       const copyButton = screen.getByLabelText("Copy contract address");
       copyButton.focus();
@@ -181,9 +160,7 @@ describe("ContractAddressComparison", () => {
 
   describe("accessibility", () => {
     it("uses semantic structure with <dt> and <dd>", () => {
-      const { container } = render(
-        <ContractAddressComparison contractId={testContractId} />
-      );
+      const { container } = render(<ContractAddressComparison contractId={testContractId} />);
 
       const dts = container.querySelectorAll("dt");
       const dds = container.querySelectorAll("dd");
@@ -193,9 +170,7 @@ describe("ContractAddressComparison", () => {
     });
 
     it("displays contract address in monospace font", () => {
-      const { container } = render(
-        <ContractAddressComparison contractId={testContractId} />
-      );
+      const { container } = render(<ContractAddressComparison contractId={testContractId} />);
 
       const codeElement = container.querySelector("code");
       expect(codeElement).toBeInTheDocument();
@@ -204,10 +179,7 @@ describe("ContractAddressComparison", () => {
 
     it("uses icons with aria-hidden when text is present", () => {
       const { container } = render(
-        <ContractAddressComparison
-          contractId={testContractId}
-          registryEntry={testRegistryEntry}
-        />
+        <ContractAddressComparison contractId={testContractId} registryEntry={testRegistryEntry} />
       );
 
       const icons = container.querySelectorAll('[aria-hidden="true"]');
@@ -217,18 +189,14 @@ describe("ContractAddressComparison", () => {
 
   describe("responsive design", () => {
     it("uses break-all class for address wrapping on mobile", () => {
-      const { container } = render(
-        <ContractAddressComparison contractId={testContractId} />
-      );
+      const { container } = render(<ContractAddressComparison contractId={testContractId} />);
 
       const addressElement = container.querySelector("code");
       expect(addressElement).toHaveClass("break-all");
     });
 
     it("renders without horizontal overflow", () => {
-      const { container } = render(
-        <ContractAddressComparison contractId={testContractId} />
-      );
+      const { container } = render(<ContractAddressComparison contractId={testContractId} />);
 
       // Just verify it renders; actual overflow is tested via E2E
       expect(container.firstChild).toBeInTheDocument();
@@ -251,10 +219,7 @@ describe("ContractAddressComparison", () => {
       };
 
       render(
-        <ContractAddressComparison
-          contractId={testContractId}
-          registryEntry={minimalEntry}
-        />
+        <ContractAddressComparison contractId={testContractId} registryEntry={minimalEntry} />
       );
 
       expect(screen.getByText("TEST")).toBeInTheDocument();
@@ -263,12 +228,9 @@ describe("ContractAddressComparison", () => {
 
     it("handles clipboard API failure gracefully", async () => {
       const user = userEvent.setup();
-      const clipboardWriteText = vi.fn().mockRejectedValue(new Error("Access denied"));
-      Object.assign(navigator, { clipboard: { writeText: clipboardWriteText } });
+      stubClipboardWriteText(vi.fn().mockRejectedValue(new Error("Access denied")));
 
-      render(
-        <ContractAddressComparison contractId={testContractId} />
-      );
+      render(<ContractAddressComparison contractId={testContractId} />);
 
       const copyButton = screen.getByLabelText("Copy contract address");
       await user.click(copyButton);

@@ -46,6 +46,14 @@ export class DefaultTelemetryService implements TelemetryService {
       return false;
     }
 
+    // Redaction pass 0: reject raw events carrying sensitive data that must not be
+    // silently stripped (wallet addresses and raw secret values). The log stays
+    // generic and never includes the event data.
+    if (containsSensitiveData(event.data) && this.hasUnstrippableSensitiveData(event.data)) {
+      this.logInternal(`Sensitive data detected in raw event ${event.eventType}`);
+      return false;
+    }
+
     // Redaction pass 1: allowlist validation
     const redactedData = this.applyAllowlist(event.eventType, event.data);
     if (redactedData === null) {
@@ -97,6 +105,39 @@ export class DefaultTelemetryService implements TelemetryService {
 
   getCollectedEvents(): TelemetryEvent[] {
     return [...this.collectedEvents];
+  }
+
+  /**
+   * Identify raw sensitive data that cannot be handled by allowlist stripping:
+   * wallet addresses and raw secret values. Recognized credential-shaped values
+   * and metadata identifiers are left to the allowlist to remove.
+   */
+  private hasUnstrippableSensitiveData(value: unknown): boolean {
+    if (typeof value !== "object" || value === null) {
+      return false;
+    }
+
+    if (Array.isArray(value)) {
+      return value.some((item) => this.hasUnstrippableSensitiveData(item));
+    }
+
+    for (const [key, nestedValue] of Object.entries(value)) {
+      const normalizedKey = key.toLowerCase();
+
+      if (normalizedKey === "walletaddress" || normalizedKey === "wallet_address") {
+        return true;
+      }
+
+      if (normalizedKey === "signature" && !containsSensitiveData(nestedValue)) {
+        return true;
+      }
+
+      if (this.hasUnstrippableSensitiveData(nestedValue)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**

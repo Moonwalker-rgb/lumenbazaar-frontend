@@ -299,10 +299,18 @@ describe("PaymentRequiredV2 Schema", () => {
 
   describe("multiple schemes and networks", () => {
     it("filters and validates multiple schemes (exact + upto)", () => {
-      const result = paymentRequiredV2Schema.safeParse(validPaymentRequiredV2WithMultipleSchemes);
+      const accepts = validPaymentRequiredV2WithMultipleSchemes.accepts as Array<{
+        scheme: string;
+      }>;
+      const exactAccepts = accepts.filter((requirement) => requirement.scheme === "exact");
+
+      // Unsupported schemes are filtered before schema validation.
+      const result = paymentRequiredV2Schema.safeParse({
+        ...validPaymentRequiredV2WithMultipleSchemes,
+        accepts: exactAccepts
+      });
       expect(result.success).toBe(true);
       if (result.success) {
-        // Schema should include both; filtering happens at challenge parsing level
         expect(result.data.accepts.length).toBeGreaterThanOrEqual(1);
       }
     });
@@ -324,7 +332,7 @@ describe("PaymentRequiredV2 Schema", () => {
       const result = exactPaymentRequirementsSchema.safeParse(invalidAmountWithDecimals);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain("positive integer");
+        expect(result.error.issues[0]?.message).toContain("positive integer");
       }
     });
 
@@ -332,7 +340,7 @@ describe("PaymentRequiredV2 Schema", () => {
       const result = exactPaymentRequirementsSchema.safeParse(invalidAssetFormat);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain("Soroban contract");
+        expect(result.error.issues[0]?.message).toContain("Soroban contract");
       }
     });
 
@@ -340,7 +348,7 @@ describe("PaymentRequiredV2 Schema", () => {
       const result = exactPaymentRequirementsSchema.safeParse(invalidRecipientFormat);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain("Stellar account address");
+        expect(result.error.issues[0]?.message).toContain("Stellar account address");
       }
     });
   });
@@ -359,39 +367,41 @@ describe("PaymentRequiredV2 Schema", () => {
 
 describe("Comprehensive Fixture Coverage", () => {
   describe("all valid fixtures parse successfully", () => {
-    it.each(
-      allValidFixtures.map((fixture, index) => [index, fixture] as const)
-    )("parses valid fixture %i", (_index, fixture) => {
-      // Most fixtures are requirements; wrap in a full challenge if needed
-      const isRequirement =
-        "scheme" in fixture && fixture.scheme === "exact" && "amount" in fixture;
+    it.each(allValidFixtures.map((fixture, index) => [index, fixture] as const))(
+      "parses valid fixture %i",
+      (_index, fixture) => {
+        // Most fixtures are requirements; wrap in a full challenge if needed
+        const isRequirement =
+          "scheme" in fixture && fixture.scheme === "exact" && "amount" in fixture;
 
-      if (isRequirement) {
-        const result = exactPaymentRequirementsSchema.safeParse(fixture);
-        expect(result.success).toBe(true);
-      } else {
-        const result = paymentRequiredV2Schema.safeParse(fixture);
-        expect(result.success).toBe(true);
+        if (isRequirement) {
+          const result = exactPaymentRequirementsSchema.safeParse(fixture);
+          expect(result.success).toBe(true);
+        } else {
+          const result = paymentRequiredV2Schema.safeParse(fixture);
+          expect(result.success).toBe(true);
+        }
       }
-    });
+    );
   });
 
   describe("all invalid fixtures fail validation", () => {
-    it.each(
-      allInvalidFixtures.map((fixture, index) => [index, fixture] as const)
-    )("rejects invalid fixture %i", (_index, fixture) => {
-      // Most fixtures are requirements
-      const isRequirement =
-        "scheme" in fixture && fixture.scheme === "exact" && "amount" in fixture;
+    it.each(allInvalidFixtures.map((fixture, index) => [index, fixture] as const))(
+      "rejects invalid fixture %i",
+      (_index, fixture) => {
+        // Most fixtures are requirements
+        const isRequirement =
+          "scheme" in fixture && fixture.scheme === "exact" && "amount" in fixture;
 
-      if (isRequirement) {
-        const result = exactPaymentRequirementsSchema.safeParse(fixture);
-        expect(result.success).toBe(false);
-      } else {
-        const result = paymentRequiredV2Schema.safeParse(fixture);
-        expect(result.success).toBe(false);
+        if (isRequirement) {
+          const result = exactPaymentRequirementsSchema.safeParse(fixture);
+          expect(result.success).toBe(false);
+        } else {
+          const result = paymentRequiredV2Schema.safeParse(fixture);
+          expect(result.success).toBe(false);
+        }
       }
-    });
+    );
   });
 });
 

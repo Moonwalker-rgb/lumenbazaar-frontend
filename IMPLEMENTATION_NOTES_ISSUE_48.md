@@ -118,6 +118,7 @@ This implementation adds a deterministic, auditable pipeline for generating Type
 **Selected**: `openapi-typescript@7.4.2` (exact version pinned)
 
 **Rationale**:
+
 - Lightweight and deterministic code generation
 - Generates TypeScript types (interfaces) without runtime dependencies
 - Widely used standard in TypeScript ecosystem
@@ -126,6 +127,7 @@ This implementation adds a deterministic, auditable pipeline for generating Type
 - Easy to integrate into build pipeline
 
 **Alternatives Considered**:
+
 - `orval`: More feature-rich (client generation, validators), but heavier with more dependencies
 - Custom generation: Overkill for type-only generation
 
@@ -134,12 +136,14 @@ This implementation adds a deterministic, auditable pipeline for generating Type
 **Strategy**: Wire hand-maintained validators to generated types using TypeScript compile-time assertions
 
 **Approach**:
+
 - Generated types live in `src/services/api/client.generated.ts` (types only)
 - Hand-maintained Zod validators live in `src/services/api/schemas.ts` (runtime validation)
 - Test file `schemas.generated-alignment.test.ts` uses `expectTypeOf` to assert that validator output types match generated types
 - If types diverge, TypeScript compilation fails immediately
 
 **Benefits**:
+
 - Validators remain hand-maintained to allow custom logic (transforms, regex, etc.)
 - Type safety is enforced at compile time
 - API drift becomes impossible to miss
@@ -148,6 +152,7 @@ This implementation adds a deterministic, auditable pipeline for generating Type
 ### Determinism Strategy
 
 **Guarantees**:
+
 1. **Pinned Artifact**: OpenAPI document is vendored with SHA-256 checksum verification
 2. **Pinned Generator**: `openapi-typescript@7.4.2` version is locked in `package.json`
 3. **Pinned Formatting**: Prettier is run with pinned version and config
@@ -155,6 +160,7 @@ This implementation adds a deterministic, auditable pipeline for generating Type
 5. **No Timestamps in Code**: Header includes `generatedAt` for audit, but doesn't vary the code
 
 **Verification**:
+
 - Regenerate twice from same pin → byte-identical output
 - Generate on clean clone → byte-identical to remote
 - CI validates: `git diff --exit-code` on generated file
@@ -180,10 +186,12 @@ This implementation adds a deterministic, auditable pipeline for generating Type
 **New Job**: `check-generated-code` (runs alongside existing `check` job)
 
 **Triggers**:
+
 - Every push to `main`
 - Every pull request to `main`
 
 **Steps**:
+
 1. Install with frozen lockfile (exact versions)
 2. Verify checksum of vendored OpenAPI
 3. Regenerate types from pinned artifact
@@ -191,6 +199,7 @@ This implementation adds a deterministic, auditable pipeline for generating Type
 5. Run typecheck to catch incompatibilities
 
 **Outcome**:
+
 - CI detects unintentional drift immediately
 - Prevents merging of stale or manually-edited generated code
 - Ensures API changes are explicitly acknowledged in pin bumps
@@ -252,6 +261,7 @@ git commit --amend
 ### Unit Tests
 
 **`backend-pin.test.ts`** validates:
+
 - Manifest exists and has all required fields
 - Commit SHA is valid 40-character hex
 - SHA-256 checksum is valid 64-character hex
@@ -262,6 +272,7 @@ git commit --amend
 - Generated client includes checksum reference
 
 Run with:
+
 ```bash
 pnpm test
 ```
@@ -269,11 +280,13 @@ pnpm test
 ### Type Alignment Tests
 
 **`schemas.generated-alignment.test.ts`** uses `expectTypeOf`:
+
 - Asserts validator output types match generated types for all schemas
 - Fails TypeScript compilation if types diverge
 - Compile-time validation, no runtime overhead
 
 Verify with:
+
 ```bash
 pnpm typecheck
 ```
@@ -347,6 +360,7 @@ git diff --exit-code -- src/services/api/client.generated.ts
 ## Files Modified/Created Summary
 
 **Created** (13 files):
+
 1. `backend-pin.json` - Manifest
 2. `backend/openapi.json` - Vendored OpenAPI
 3. `scripts/verify-backend-pin.mjs` - Checksum verification
@@ -362,12 +376,14 @@ git diff --exit-code -- src/services/api/client.generated.ts
 13. `IMPLEMENTATION_NOTES_ISSUE_48.md` - This file
 
 **Updated** (2 files):
+
 1. `docs/api-contract.md` - Reference pinning mechanism
 2. `README.md` - Added Backend API Contract section
 
 ## Next Steps
 
 1. **Verify Checksum**: Compute the actual SHA-256 of `backend/openapi.json` and update `backend-pin.json`
+
    ```bash
    node scripts/compute-pin-checksum.mjs hex
    ```
@@ -375,6 +391,7 @@ git diff --exit-code -- src/services/api/client.generated.ts
 2. **Update Manifest**: Replace placeholder checksum in `backend-pin.json` with actual value
 
 3. **Test Locally**:
+
    ```bash
    pnpm install
    pnpm check

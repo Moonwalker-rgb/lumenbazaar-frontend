@@ -25,7 +25,8 @@ describe("Sensitive Data Redaction", () => {
     });
 
     it("should detect JWT-like patterns", () => {
-      const jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
+      const jwt =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
       expect(containsSensitiveData(jwt)).toBe(true);
     });
 
@@ -49,10 +50,7 @@ describe("Sensitive Data Redaction", () => {
     });
 
     it("should detect sensitive data in arrays", () => {
-      const arr = [
-        "safe",
-        "GDZST3XVCDTUJ76ZAV2HA72KYYX4YQFOMLZZZNNFNM3XJN2YQMXIJPME"
-      ];
+      const arr = ["safe", "GDZST3XVCDTUJ76ZAV2HA72KYYX4YQFOMLZZZNNFNM3XJN2YQMXIJPME"];
       expect(containsSensitiveData(arr)).toBe(true);
     });
 

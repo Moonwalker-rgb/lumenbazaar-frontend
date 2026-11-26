@@ -82,7 +82,7 @@ describe("Route Coverage", () => {
     });
 
     it("should not exclude non-expired routes", () => {
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toISOString().split("T")[0]!;
 
       for (const exclusion of EXCLUDED_ROUTES) {
         expect(

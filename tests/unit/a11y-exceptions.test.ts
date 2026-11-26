@@ -8,7 +8,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { A11Y_EXCEPTIONS, validateExceptions, getExceptionsForRoute } from "../../tests/fixtures/a11y-exceptions";
+import {
+  A11Y_EXCEPTIONS,
+  validateExceptions,
+  getExceptionsForRoute
+} from "../../tests/fixtures/a11y-exceptions";
 
 describe("A11y Exceptions Framework", () => {
   describe("validateExceptions", () => {
@@ -44,7 +48,9 @@ describe("A11y Exceptions Framework", () => {
 
       if (!validation.valid) {
         expect(validation.errors.length).toBeGreaterThan(0);
-        expect(validation.errors[0]).toMatch(/Exception \d+:|ruleId|route|selector|reason|owner|expiryDate/);
+        expect(validation.errors[0]).toMatch(
+          /Exception \d+:|ruleId|route|selector|reason|owner|expiryDate/
+        );
       }
     });
   });
@@ -79,7 +85,7 @@ describe("A11y Exceptions Framework", () => {
   describe("Exception entries", () => {
     it("should have all required fields for each exception", () => {
       for (let i = 0; i < A11Y_EXCEPTIONS.length; i++) {
-        const exc = A11Y_EXCEPTIONS[i];
+        const exc = A11Y_EXCEPTIONS[i]!;
         expect(exc.ruleId, `Exception ${i}: ruleId`).toBeDefined();
         expect(exc.route, `Exception ${i}: route`).toBeDefined();
         expect(exc.selector, `Exception ${i}: selector`).toBeDefined();
@@ -91,14 +97,14 @@ describe("A11y Exceptions Framework", () => {
 
     it("should have non-empty reason field", () => {
       for (let i = 0; i < A11Y_EXCEPTIONS.length; i++) {
-        const exc = A11Y_EXCEPTIONS[i];
+        const exc = A11Y_EXCEPTIONS[i]!;
         expect(exc.reason.length, `Exception ${i}: reason must not be empty`).toBeGreaterThan(0);
       }
     });
 
     it("should have owner field", () => {
       for (let i = 0; i < A11Y_EXCEPTIONS.length; i++) {
-        const exc = A11Y_EXCEPTIONS[i];
+        const exc = A11Y_EXCEPTIONS[i]!;
         expect(exc.owner.length, `Exception ${i}: owner must not be empty`).toBeGreaterThan(0);
         // Owner should look like a person/team identifier (e.g., @team, email, name)
         expect(exc.owner).toMatch(/@|[\w.+\-]+@[\w.-]+|[\w\s.]+/);
@@ -107,7 +113,7 @@ describe("A11y Exceptions Framework", () => {
 
     it("should have expiryDate in ISO 8601 format (YYYY-MM-DD)", () => {
       for (let i = 0; i < A11Y_EXCEPTIONS.length; i++) {
-        const exc = A11Y_EXCEPTIONS[i];
+        const exc = A11Y_EXCEPTIONS[i]!;
         expect(exc.expiryDate, `Exception ${i}: expiryDate format`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 
         // Verify it's a valid date
@@ -117,10 +123,10 @@ describe("A11y Exceptions Framework", () => {
     });
 
     it("should have expiryDate in the future", () => {
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toISOString().split("T")[0]!;
 
       for (let i = 0; i < A11Y_EXCEPTIONS.length; i++) {
-        const exc = A11Y_EXCEPTIONS[i];
+        const exc = A11Y_EXCEPTIONS[i]!;
         expect(
           exc.expiryDate >= today,
           `Exception ${i}: expiryDate must be in the future (${exc.expiryDate} >= ${today})`

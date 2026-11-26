@@ -54,8 +54,7 @@ export function PaymentRequirementViewer({
   // Format the amount using network-specific asset metadata
   const networkConfig = getNetworkConfig(requirement.network);
   const formattedAmount = useMemo(
-    () =>
-      tryFormatAmount(requirement.amount, requirement.assetCode, requirement.network),
+    () => tryFormatAmount(requirement.amount, requirement.assetCode, requirement.network),
     [requirement.amount, requirement.assetCode, requirement.network]
   );
 
@@ -83,11 +82,7 @@ export function PaymentRequirementViewer({
               className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-700"
             />
             <div className="flex-1">
-              <h3
-                ref={warningHeadingRef}
-                className="font-semibold text-amber-900"
-                tabIndex={-1}
-              >
+              <h3 ref={warningHeadingRef} className="font-semibold text-amber-900" tabIndex={-1}>
                 {isMalformedAsset ? "Invalid Asset Contract" : "Unknown Asset"}
               </h3>
               <p className="mt-2 text-sm text-amber-800">
@@ -102,14 +97,7 @@ export function PaymentRequirementViewer({
         </Card>
 
         {/* Contract Address Comparison */}
-        {assetContractId && (
-          <ContractAddressComparison
-            contractId={assetContractId}
-            registryEntry={
-              assetTrust.type === "trusted" ? assetTrust.registryEntry : undefined
-            }
-          />
-        )}
+        {assetContractId && <ContractAddressComparison contractId={assetContractId} />}
 
         {/* Confirmation Checkbox (only for unknown, not malformed) */}
         {isUnknownAsset && (
@@ -128,7 +116,10 @@ export function PaymentRequirementViewer({
                   <span className="font-medium">
                     I understand this asset is not in the trusted registry
                   </span>
-                  <span id="confirm-unknown-asset-description" className="block text-xs text-amber-700 mt-1">
+                  <span
+                    id="confirm-unknown-asset-description"
+                    className="block text-xs text-amber-700 mt-1"
+                  >
                     I have verified the contract address and proceed at my own risk.
                   </span>
                 </span>
@@ -259,4 +250,3 @@ function Field({ label, value, wrap = false }: { label: string; value: string; w
     </div>
   );
 }
-

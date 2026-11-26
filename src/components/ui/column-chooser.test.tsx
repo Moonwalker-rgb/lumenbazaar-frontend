@@ -238,9 +238,7 @@ describe("ColumnChooser", () => {
       const statusCheckbox = screen.getByRole("menuitemcheckbox", { name: /Status/ });
       await userEvent.click(statusCheckbox);
 
-      expect(onColumnsChange).toHaveBeenCalledWith(
-        expect.not.arrayContaining(["status"])
-      );
+      expect(onColumnsChange).toHaveBeenCalledWith(expect.not.arrayContaining(["status"]));
     });
 
     it("prevents clicking required columns", async () => {
@@ -280,9 +278,7 @@ describe("ColumnChooser", () => {
       await userEvent.click(statusCheckbox);
 
       // Required columns should still be in the list
-      expect(onColumnsChange).toHaveBeenCalledWith(
-        expect.arrayContaining(defaultRequiredColumns)
-      );
+      expect(onColumnsChange).toHaveBeenCalledWith(expect.arrayContaining(defaultRequiredColumns));
     });
   });
 
@@ -377,9 +373,7 @@ describe("ColumnChooser", () => {
       const resetButton = screen.getByRole("menuitem", { name: /Reset to default/ });
       await userEvent.click(resetButton);
 
-      expect(onColumnsChange).toHaveBeenCalledWith(
-        defaultColumns.map((c) => c.id)
-      );
+      expect(onColumnsChange).toHaveBeenCalledWith(defaultColumns.map((c) => c.id));
     });
   });
 
@@ -447,10 +441,7 @@ describe("ColumnChooser", () => {
       await userEvent.click(button);
 
       const nameCheckbox = screen.getByRole("menuitemcheckbox", { name: /Name/ });
-      expect(nameCheckbox).toHaveAttribute(
-        "title",
-        "This column is required and cannot be hidden"
-      );
+      expect(nameCheckbox).toHaveAttribute("title", "This column is required and cannot be hidden");
     });
 
     it("updates aria-checked status on toggle", async () => {

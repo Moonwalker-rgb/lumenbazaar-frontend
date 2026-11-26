@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 /**
  * E2E tests for asset trust verification (Issue #34)
- * 
+ *
  * Tests the unknown asset warning, confirmation flow, and contract address display
  * across desktop and mobile viewports.
  */
@@ -158,9 +158,7 @@ test.describe("Asset Trust Verification", () => {
   test.describe("Mobile Viewport (375x667)", () => {
     test.use({ viewport: { width: 375, height: 667 } });
 
-    test("unknown asset warning displays on mobile without horizontal scroll", async ({
-      page
-    }) => {
+    test("unknown asset warning displays on mobile without horizontal scroll", async ({ page }) => {
       await page.goto(`/resources/${unknownAssetResourceId}`);
       await page.waitForSelector("text=Unknown Asset", { timeout: 5000 });
 
@@ -286,13 +284,18 @@ test.describe("Asset Trust Verification", () => {
       const checkbox = page.locator("input[type='checkbox']");
 
       // Should have aria-describedby
-      await expect(checkbox).toHaveAttribute("aria-describedby", "confirm-unknown-asset-description");
+      await expect(checkbox).toHaveAttribute(
+        "aria-describedby",
+        "confirm-unknown-asset-description"
+      );
 
       // Should have id
       await expect(checkbox).toHaveAttribute("id", "confirm-unknown-asset");
 
       // Label text should be visible
-      const labelText = page.locator("text=/I understand this asset is not in the trusted registry/");
+      const labelText = page.locator(
+        "text=/I understand this asset is not in the trusted registry/"
+      );
       await expect(labelText).toBeVisible();
     });
 
@@ -320,9 +323,7 @@ test.describe("Asset Trust Verification", () => {
   });
 
   test.describe("Lookalike Detection", () => {
-    test("displays warning for lookalike symbol with different contract", async ({
-      page
-    }) => {
+    test("displays warning for lookalike symbol with different contract", async ({ page }) => {
       // This test assumes a resource with a lookalike symbol is available
       // For now, we verify the lookalike detection logic works via the warning display
       await page.goto(`/resources/${unknownAssetResourceId}`);
@@ -339,7 +340,7 @@ test.describe("Asset Trust Verification", () => {
 
       // If the page shows a comparison section, verify it displays appropriately
       const comparisonSection = page.locator("text=/Payment Requirement|Trusted Registry/");
-      if (await comparisonSection.count() > 0) {
+      if ((await comparisonSection.count()) > 0) {
         await expect(comparisonSection).toBeVisible();
       }
     });
@@ -350,7 +351,6 @@ test.describe("Asset Trust Verification", () => {
       // Navigate to a page that would have a malformed contract ID
       // This would need a resource configured with an invalid contract ID
       // For now, the test structure is in place
-
       // When malformed asset is shown:
       // - Should show "Invalid Asset Contract" heading
       // - Should NOT show confirmation checkbox
@@ -382,9 +382,7 @@ test.describe("Asset Trust Verification", () => {
       // Verify key elements are visible
       await expect(page.locator("text=Unknown Asset")).toBeVisible();
       await expect(page.locator("input[type='checkbox']")).toBeVisible();
-      await expect(page.locator("button:has-text('Proceed')"
-
-)).toBeVisible();
+      await expect(page.locator("button:has-text('Proceed')")).toBeVisible();
     });
 
     test("trusted asset display is clean and professional", async ({ page }) => {

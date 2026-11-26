@@ -1,7 +1,9 @@
+"use client";
+
 import { ChevronLeft, ChevronRight, ExternalLink, Loader2, ReceiptText } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -36,25 +38,12 @@ export function SellerPayments({ sellerId = "seller_atlas_weather" }: { sellerId
   );
   const earnings = useMemo(() => summarizeSellerEarnings(allActivity), [allActivity]);
 
-  if (!isDemoMode(mode)) {
-    return (
-      <>
-        <PageHeader
-          description="Reconcile verification attempts, settlements, failure reasons, receipts, and transaction hashes."
-          title="Seller payments"
-        />
-        <ErrorState
-          code="UNSUPPORTED_CAPABILITY"
-          description="Seller payment history is not exposed by the current backend contract. No demo payments are shown in live modes."
-          title="Seller payments unavailable"
-        />
-      </>
-    );
-  }
-
   // Track previous sellerId to reset pagination if prop changes
   const previousSellerIdRef = useRef(sellerId);
-  const sellerIdChanged = previousSellerIdRef.current !== sellerId;
+  const paginationParams = useMemo(
+    () => new URLSearchParams(searchParams?.toString() ?? ""),
+    [searchParams]
+  );
 
   // Pagination hook for cursor-based navigation
   const {
@@ -95,14 +84,16 @@ export function SellerPayments({ sellerId = "seller_atlas_weather" }: { sellerId
       };
     },
     getKey: (item) => item.attempt.id,
-    urlSearchParams: searchParams as any
+    urlSearchParams: paginationParams
   });
 
   // Reset pagination if sellerId prop changes
-  if (sellerIdChanged) {
-    resetPagination();
-    previousSellerIdRef.current = sellerId;
-  }
+  useEffect(() => {
+    if (previousSellerIdRef.current !== sellerId) {
+      previousSellerIdRef.current = sellerId;
+      resetPagination();
+    }
+  }, [sellerId, resetPagination]);
 
   const handleExportJSON = useCallback(() => {
     try {
@@ -127,6 +118,22 @@ export function SellerPayments({ sellerId = "seller_atlas_weather" }: { sellerId
       setIsExporting(false);
     }
   }, [paginatedActivity, sellerId]);
+
+  if (!isDemoMode(mode)) {
+    return (
+      <>
+        <PageHeader
+          description="Reconcile verification attempts, settlements, failure reasons, receipts, and transaction hashes."
+          title="Seller payments"
+        />
+        <ErrorState
+          code="UNSUPPORTED_CAPABILITY"
+          description="Seller payment history is not exposed by the current backend contract. No demo payments are shown in live modes."
+          title="Seller payments unavailable"
+        />
+      </>
+    );
+  }
 
   const emptyState = emptyStateForCollection("payments");
   const earningsWindow =
@@ -218,7 +225,7 @@ export function SellerPayments({ sellerId = "seller_atlas_weather" }: { sellerId
             <div className="flex-1">
               <p className="text-sm font-medium text-red-900">{error.message}</p>
             </div>
-            <Button onClick={resetPagination} size="sm" variant="secondary">
+            <Button onClick={resetPagination} variant="secondary">
               Start over
             </Button>
           </CardBody>
@@ -282,7 +289,6 @@ export function SellerPayments({ sellerId = "seller_atlas_weather" }: { sellerId
               onClick={previousPage}
               disabled={!hasPreviousPage || isLoading}
               variant="secondary"
-              size="sm"
               aria-label="Previous page"
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -297,7 +303,6 @@ export function SellerPayments({ sellerId = "seller_atlas_weather" }: { sellerId
               onClick={nextPage}
               disabled={!hasNextPage || isLoading}
               variant="secondary"
-              size="sm"
               aria-label="Next page"
             >
               Next

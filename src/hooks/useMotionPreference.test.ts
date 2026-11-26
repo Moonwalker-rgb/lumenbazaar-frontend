@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 import { useMotionPreference } from "./useMotionPreference";
 
 describe("useMotionPreference", () => {
@@ -149,17 +151,17 @@ describe("useMotionPreference", () => {
   });
 
   it("should not call matchMedia on server side (window undefined)", () => {
-    // This test verifies the guard clause works
+    // renderHook needs a DOM, so render a tiny component on the server instead.
     const originalWindow = global.window;
 
-    try {
-      // @ts-ignore - Intentionally testing server-side behavior
-      delete global.window;
+    function MotionProbe() {
+      useMotionPreference();
+      return null;
+    }
 
-      // Should not throw
-      expect(() => {
-        renderHook(() => useMotionPreference());
-      }).not.toThrow();
+    try {
+      Reflect.deleteProperty(globalThis, "window");
+      expect(() => renderToString(createElement(MotionProbe))).not.toThrow();
     } finally {
       global.window = originalWindow;
     }

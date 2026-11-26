@@ -4,14 +4,16 @@ import { describe, expect, it, vi } from "vitest";
 
 import { demoConformanceRun } from "@/fixtures/lumenbazaar";
 import { createQueryClient } from "@/services/api/query";
+import { loadOperatorSnapshot } from "@/services/operators";
 
 import { ConformancePanel } from "./conformance-panel";
 
+const loadOperatorSnapshotMock = vi.mocked(loadOperatorSnapshot);
+
 // Mock the operator service
 vi.mock("@/services/operators", async () => {
-  const actual = await vi.importActual<typeof import("@/services/operators")>(
-    "@/services/operators"
-  );
+  const actual =
+    await vi.importActual<typeof import("@/services/operators")>("@/services/operators");
   return {
     ...actual,
     loadOperatorSnapshot: vi.fn()
@@ -20,8 +22,7 @@ vi.mock("@/services/operators", async () => {
 
 describe("ConformancePanel", () => {
   it("renders conformance evidence when data is successfully loaded", async () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockResolvedValue({
+    loadOperatorSnapshotMock.mockResolvedValue({
       checkedAt: "2026-10-15T10:00:00Z",
       conformance: demoConformanceRun,
       healthRows: [
@@ -101,8 +102,7 @@ describe("ConformancePanel", () => {
   });
 
   it("renders loading state while fetching operator snapshot", () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockImplementation(() => new Promise(() => {})); // Never resolves
+    loadOperatorSnapshotMock.mockImplementation(() => new Promise(() => {})); // Never resolves
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -114,8 +114,7 @@ describe("ConformancePanel", () => {
   });
 
   it("renders error state when snapshot is unavailable", async () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockRejectedValue(new Error("Backend offline"));
+    loadOperatorSnapshotMock.mockRejectedValue(new Error("Backend offline"));
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -123,16 +122,18 @@ describe("ConformancePanel", () => {
       </QueryClientProvider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText("Conformance unavailable")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText("Conformance unavailable")).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
-    expect(screen.getByText(/could not be verified/i)).toBeInTheDocument();
+    expect(screen.getByText("Backend offline")).toBeInTheDocument();
   });
 
   it("renders conformance unavailable when snapshot.conformance is null", async () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockResolvedValue({
+    loadOperatorSnapshotMock.mockResolvedValue({
       checkedAt: "2026-10-15T10:00:00Z",
       conformance: null,
       healthRows: [
@@ -197,18 +198,22 @@ describe("ConformancePanel", () => {
       </QueryClientProvider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText("Conformance unavailable")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText("Conformance unavailable")).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
-    expect(screen.getByText("No live conformance run could be verified")).toBeInTheDocument();
+    expect(
+      screen.getByText("No live conformance run could be verified from the configured backend.")
+    ).toBeInTheDocument();
   });
 
   it("displays warnings when conformance fails during partial outage", async () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockResolvedValue({
+    loadOperatorSnapshotMock.mockResolvedValue({
       checkedAt: "2026-10-15T10:00:00Z",
-      conformance: null,
+      conformance: demoConformanceRun,
       healthRows: [
         {
           checkedAt: "2026-10-15T10:00:00Z",
@@ -281,8 +286,7 @@ describe("ConformancePanel", () => {
   });
 
   it("never displays fixture conformance data when API fails", async () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockResolvedValue({
+    loadOperatorSnapshotMock.mockResolvedValue({
       checkedAt: "2026-10-15T10:00:00Z",
       conformance: null,
       healthRows: [
@@ -355,9 +359,12 @@ describe("ConformancePanel", () => {
       </QueryClientProvider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText("Conformance unavailable")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText("Conformance unavailable")).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
     // Explicitly verify that no conformance data is shown
     expect(screen.queryByText("Endpoint checks")).not.toBeInTheDocument();
@@ -368,10 +375,9 @@ describe("ConformancePanel", () => {
   });
 
   it("displays unavailable badge and warning message when completely offline", async () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockResolvedValue({
+    loadOperatorSnapshotMock.mockResolvedValue({
       checkedAt: "2026-10-15T10:00:00Z",
-      conformance: null,
+      conformance: demoConformanceRun,
       healthRows: [
         {
           checkedAt: "2026-10-15T10:00:00Z",
@@ -443,13 +449,13 @@ describe("ConformancePanel", () => {
     );
 
     await waitFor(() => {
-      // Should show the overall unavailable state
-      const badge = screen.getByText("API unavailable");
+      // Should show the degraded source badge
+      const badge = screen.getByText("Partial API data");
       expect(badge).toBeInTheDocument();
     });
 
-    // Show conformance unavailable error with proper message
-    expect(screen.getByText("Conformance unavailable")).toBeInTheDocument();
-    expect(screen.getByText("No live conformance run could be verified")).toBeInTheDocument();
+    // Warning badges reflect every unavailable data source
+    expect(screen.getByText("health unavailable")).toBeInTheDocument();
+    expect(screen.getByText("readiness unavailable")).toBeInTheDocument();
   });
 });

@@ -298,9 +298,7 @@ export function confirmedReceiptLedger(
 
   const ledger = receipt.ledger;
 
-  return typeof ledger === "number" && Number.isInteger(ledger) && ledger > 0
-    ? ledger
-    : undefined;
+  return typeof ledger === "number" && Number.isInteger(ledger) && ledger > 0 ? ledger : undefined;
 }
 
 export function formatPaymentAmount(amount: string, assetCode: string) {

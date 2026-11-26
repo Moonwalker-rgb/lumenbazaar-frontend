@@ -36,9 +36,7 @@ async function verify() {
 
     // Validate manifest structure
     if (!manifest.artifact?.sha256) {
-      console.error(
-        "❌ Manifest missing required field: artifact.sha256"
-      );
+      console.error("❌ Manifest missing required field: artifact.sha256");
       process.exit(1);
     }
 
@@ -46,16 +44,11 @@ async function verify() {
     const documentRaw = fs.readFileSync(documentPath, "utf8");
 
     // Compute hash
-    const hash = crypto
-      .createHash("sha256")
-      .update(documentRaw)
-      .digest("hex");
+    const hash = crypto.createHash("sha256").update(documentRaw).digest("hex");
 
     // Compare
     if (hash !== manifest.artifact.sha256) {
-      console.error(
-        `❌ CHECKSUM MISMATCH: Expected ${manifest.artifact.sha256}, got ${hash}`
-      );
+      console.error(`❌ CHECKSUM MISMATCH: Expected ${manifest.artifact.sha256}, got ${hash}`);
       process.exit(1);
     }
 

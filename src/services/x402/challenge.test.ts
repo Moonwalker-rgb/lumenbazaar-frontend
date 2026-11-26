@@ -61,9 +61,9 @@ describe("x402 v2 challenge handling", () => {
   });
 
   it.each([
-    ["asset", { asset: "CDIFFERENT" }],
+    ["asset", { asset: "CASSETDEMOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }],
     ["amount", { amount: "500001" }],
-    ["recipient", { payTo: "GDIFFERENT" }]
+    ["recipient", { payTo: "GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQF" }]
   ])("rejects a mutated %s", async (_field, mutation) => {
     await expectChallengeCode(
       { ...deployedCompatibleChallenge, accepts: [{ ...requirement, ...mutation }] },

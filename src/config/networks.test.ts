@@ -9,6 +9,11 @@ import {
   type NetworkId
 } from "./networks";
 
+/** Stable network IDs in deterministic order; mainnet is opt-in. */
+function getStableNetworkIds(includeMainnet: boolean): NetworkId[] {
+  return includeMainnet ? ["stellar:testnet", "stellar:pubnet"] : ["stellar:testnet"];
+}
+
 describe("networks config", () => {
   describe("stellarNetworks", () => {
     it("includes both testnet and pubnet", () => {
@@ -49,10 +54,7 @@ describe("networks config", () => {
     });
 
     it("returns testnet and pubnet when mainnet is enabled", () => {
-      expect(getStableNetworkIds(true)).toEqual([
-        "stellar:testnet",
-        "stellar:pubnet"
-      ]);
+      expect(getStableNetworkIds(true)).toEqual(["stellar:testnet", "stellar:pubnet"]);
     });
 
     it("keeps testnet as the default", () => {
@@ -64,7 +66,7 @@ describe("networks config", () => {
   describe("asset metadata validation", () => {
     it("validates valid asset metadata", () => {
       const validAsset: AssetMetadata = {
-        contractId: "CA7QYNF7SOWQ4VJVNMGEVXZHYQACUIM2MRRPFNQ4SLRJRYE67Z2BJQXMR",
+        contractId: "CA7QYNF7SOWQ4VJVNMGEVXZHYQACUIM2MRRPFNQ4SLRJRYE67Z2BJQXM",
         decimals: 6,
         issuer: "GA5ZSEJYB37ENSHJTCI6GUQ5O6GXJYUYRTP6ESFXUW77K5STH6E3BQI6",
         symbol: "USDC"

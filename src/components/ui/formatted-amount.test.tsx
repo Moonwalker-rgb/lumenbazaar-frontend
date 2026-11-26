@@ -35,9 +35,7 @@ describe("FormattedAmountDisplay", () => {
     });
 
     it("hides atomic view when showAtomic is false", () => {
-      render(
-        <FormattedAmountDisplay formattedAmount={mockFormattedAmount} showAtomic={false} />
-      );
+      render(<FormattedAmountDisplay formattedAmount={mockFormattedAmount} showAtomic={false} />);
 
       expect(screen.queryByText(/atomic:/)).not.toBeInTheDocument();
       expect(screen.queryByText(/contract:/)).not.toBeInTheDocument();
@@ -45,10 +43,7 @@ describe("FormattedAmountDisplay", () => {
 
     it("applies custom className", () => {
       const { container } = render(
-        <FormattedAmountDisplay
-          formattedAmount={mockFormattedAmount}
-          className="custom-class"
-        />
+        <FormattedAmountDisplay formattedAmount={mockFormattedAmount} className="custom-class" />
       );
 
       const div = container.querySelector(".custom-class");
@@ -126,12 +121,7 @@ describe("FormattedAmountDisplay", () => {
     });
 
     it("handles missing fallbackContractId gracefully", () => {
-      render(
-        <FormattedAmountDisplay
-          formattedAmount={null}
-          fallbackContractId={undefined}
-        />
-      );
+      render(<FormattedAmountDisplay formattedAmount={null} fallbackContractId={undefined} />);
 
       expect(screen.getByText("Unknown asset")).toBeInTheDocument();
       expect(screen.getByText(/contract:/)).toBeInTheDocument();
@@ -259,9 +249,7 @@ describe("FormattedAmountDisplay", () => {
       );
 
       // Formatted amount is in the main content
-      expect(container.querySelector(".font-semibold")).toHaveTextContent(
-        "1.234567 USDC"
-      );
+      expect(container.querySelector(".font-semibold")).toHaveTextContent("1.234567 USDC");
 
       // Atomic and contract info is in secondary text (still accessible)
       const secondaryText = container.querySelector(".text-xs");

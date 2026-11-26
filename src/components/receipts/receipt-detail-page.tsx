@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 
-
 import { ErrorState, LoadingState } from "@/components/ui/surfaces";
 import { apiClient } from "@/services/api/client";
 import { normalizeUiError } from "@/services/ui-state";
@@ -33,16 +32,13 @@ export function ReceiptDetailPage({ receiptId }: { receiptId: string }) {
   if (error !== null) {
     const state = normalizeUiError(error, {
       code: "RECEIPT_UNAVAILABLE",
-      description: "The receipt could not be retrieved from the backend. Please verify the receipt ID and try again.",
+      description:
+        "The receipt could not be retrieved from the backend. Please verify the receipt ID and try again.",
       title: "Receipt unavailable"
     });
 
     return (
-      <div
-        aria-live="assertive"
-        aria-relevant="additions text"
-        role="alert"
-      >
+      <div aria-live="assertive" aria-relevant="additions text" role="alert">
         <ErrorState
           code={state.code}
           description={state.description}
@@ -60,11 +56,7 @@ export function ReceiptDetailPage({ receiptId }: { receiptId: string }) {
 
   return (
     <div className="space-y-5">
-      <div
-        aria-live="polite"
-        aria-relevant="additions text"
-        role="status"
-      >
+      <div aria-live="polite" aria-relevant="additions text" role="status">
         <ReceiptDetailSummary headingRef={headingRef} receipt={data} />
       </div>
     </div>

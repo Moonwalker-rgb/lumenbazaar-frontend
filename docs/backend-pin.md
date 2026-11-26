@@ -55,6 +55,7 @@ The vendored OpenAPI document is at `backend/openapi.json` and is checked into v
 This file is **auto-generated and should not be edited manually**. It contains TypeScript interfaces for all API endpoints, request/response bodies, and shared schemas.
 
 The file includes a header comment identifying:
+
 - The backend commit URL
 - The OpenAPI document checksum
 - The generation timestamp
@@ -98,6 +99,7 @@ pnpm run update-backend-pin <backend-commit-sha>
 ```
 
 This script:
+
 - Clones the backend repository to a temporary directory
 - Checks out the specified commit
 - Extracts the OpenAPI document from `docs/api/openapi.json`
@@ -116,6 +118,7 @@ git diff src/services/api/client.generated.ts
 ```
 
 Expect changes in:
+
 - **backend-pin.json**: Updated commit SHA, checksum, timestamp
 - **backend/openapi.json**: New OpenAPI schema (if the backend API changed)
 - **src/services/api/client.generated.ts**: New or updated type definitions
@@ -140,6 +143,7 @@ pnpm check
 ```
 
 This runs:
+
 - Format check
 - Linting
 - Type checking (catches validator/type mismatches)
@@ -185,6 +189,7 @@ The GitHub Actions workflow includes a `check-generated-code` job that runs on e
 **"Checksum verification failed"**
 
 The vendored `backend/openapi.json` was modified. Either:
+
 - Revert the change (use `git checkout backend/openapi.json`)
 - Or if intentional, re-pin to the modified document by running `pnpm run update-backend-pin <commit>`
 

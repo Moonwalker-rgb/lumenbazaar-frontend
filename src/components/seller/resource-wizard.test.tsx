@@ -14,9 +14,20 @@ import { ResourceWizard } from "./resource-wizard";
 
 const mocks = vi.hoisted(() => ({ loadResourceForEdit: vi.fn() }));
 
-vi.mock("@/hooks/motion-context", () => ({
-  useMotion: () => ({ enableMotion: false })
-}));
+vi.mock("@/hooks/motion-context", () => {
+  const motionContext = {
+    enableMotion: false,
+    isHydrated: true,
+    prefersReducedMotion: true,
+    shouldReduceMotion: true
+  };
+
+  return {
+    DEFAULT_MOTION_CONTEXT: motionContext,
+    useMotion: () => motionContext,
+    useOptionalMotion: () => motionContext
+  };
+});
 
 vi.mock("@/services/resource-edit", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/services/resource-edit")>();

@@ -59,9 +59,7 @@ function getCommitHash() {
  */
 function getBranchName() {
   try {
-    return child_process
-      .execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf-8" })
-      .trim();
+    return child_process.execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf-8" }).trim();
   } catch (error) {
     return "unknown";
   }

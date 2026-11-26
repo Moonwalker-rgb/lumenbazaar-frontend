@@ -1,6 +1,6 @@
 /**
  * Focus management utilities for accessibility.
- * 
+ *
  * Handles focus restoration after:
  * - Route/page transitions
  * - Modal/overlay closures
@@ -10,7 +10,7 @@
 /**
  * Finds a stable focus target for page navigation.
  * Looks for the first h1, then h2, or falls back to main.
- * 
+ *
  * @param root - DOM node to search within (defaults to document)
  * @returns The found element or null
  */
@@ -55,19 +55,15 @@ export interface FocusOptions {
 /**
  * Safely focuses an element without scrolling the page.
  * Returns true if focus was successfully applied.
- * 
+ *
  * @param options - Focus options
  * @returns true if element was focused, false otherwise
  */
 export function focusHeadingWithoutScroll(options: FocusOptions = {}): boolean {
-  const {
-    force = false,
-    preventScroll = true,
-    target
-  } = options;
+  const { force = false, preventScroll = true, target } = options;
 
   const element = target || findPageHeading();
-  
+
   if (!element) {
     return false;
   }
@@ -95,7 +91,7 @@ export function focusHeadingWithoutScroll(options: FocusOptions = {}): boolean {
 /**
  * Restores focus to a previously saved element.
  * Used when closing overlays or dismissing dialogs.
- * 
+ *
  * @param element - Element to focus
  * @param options - Focus options
  * @returns true if focus was restored, false otherwise
@@ -126,7 +122,7 @@ export function restorePreviousFocus(
  * Manages focus for overlay/modal closing sequences.
  * Returns focus to the trigger element that opened the overlay.
  * If that element is unavailable, focuses the page heading.
- * 
+ *
  * @param triggerElement - Element that triggered the overlay
  * @param options - Focus options
  * @returns true if focus was managed, false otherwise
@@ -153,7 +149,7 @@ export function manageFocusAfterOverlay(
 /**
  * Handles focus when the page changes (route navigation).
  * Focuses a meaningful landmark without scrolling.
- * 
+ *
  * @param options - Focus options
  * @returns true if focus was applied, false otherwise
  */

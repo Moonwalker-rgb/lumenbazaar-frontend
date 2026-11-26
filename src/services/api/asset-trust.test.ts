@@ -47,7 +47,7 @@ describe("Asset Trust Classification", () => {
     describe("unknown assets", () => {
       it("classifies unknown contract as unknown", () => {
         const status = classifyAssetTrust(
-          "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+          "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
           "stellar:testnet"
         );
 
@@ -75,7 +75,7 @@ describe("Asset Trust Classification", () => {
     describe("lookalike-symbol assets", () => {
       it("classifies lookalike USDC (different contract) as unknown despite matching symbol", () => {
         // Valid contract ID but not in registry, matching symbol to testnet USDC
-        const lookalike = "CBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQ1";
+        const lookalike = "CBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQ2";
         const status = classifyAssetTrust(lookalike, "stellar:testnet");
 
         expect(status.type).toBe("unknown");
@@ -90,9 +90,9 @@ describe("Asset Trust Classification", () => {
         const status = classifyAssetTrust("INVALID_CONTRACT_ID", "stellar:testnet");
 
         expect(status.type).toBe("malformed");
-        expect(
-          (status as Extract<AssetTrustStatus, { type: "malformed" }>).reason
-        ).toBe("invalid_contract_id");
+        expect((status as Extract<AssetTrustStatus, { type: "malformed" }>).reason).toBe(
+          "invalid_contract_id"
+        );
       });
 
       it("classifies non-C-prefixed ID as malformed", () => {

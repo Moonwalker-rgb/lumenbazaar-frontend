@@ -204,9 +204,7 @@ function findBalance(
   assetCode: string,
   assetIssuer: string | null
 ): StellarBalance | null {
-  return (
-    balances.find((b) => b.assetCode === assetCode && b.assetIssuer === assetIssuer) ?? null
-  );
+  return balances.find((b) => b.assetCode === assetCode && b.assetIssuer === assetIssuer) ?? null;
 }
 
 /**

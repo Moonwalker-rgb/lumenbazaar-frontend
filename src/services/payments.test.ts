@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   explorerTransactionUrl,
+  exportToCSV,
+  exportToJSON,
   isValidTransactionHash,
   isSyntheticTransactionId,
   sanitizeReceiptForExport,
@@ -49,7 +51,7 @@ describe("isValidTransactionHash", () => {
     const nonStringValues = [123, true, false, {}, [], NaN];
 
     nonStringValues.forEach((value) => {
-      expect(isValidTransactionHash(value as any)).toBe(false);
+      expect(isValidTransactionHash(value as unknown as string | null | undefined)).toBe(false);
     });
   });
 
@@ -164,12 +166,7 @@ describe("explorerTransactionUrl", () => {
 
 describe("isSyntheticTransactionId", () => {
   it("returns true for upto-* prefixed identifiers", () => {
-    const syntheticIds = [
-      "upto-supported",
-      "upto-session-create",
-      "upto-settle",
-      "upto-test-123"
-    ];
+    const syntheticIds = ["upto-supported", "upto-session-create", "upto-settle", "upto-test-123"];
 
     syntheticIds.forEach((id) => {
       expect(isSyntheticTransactionId(id)).toBe(true);
@@ -177,12 +174,7 @@ describe("isSyntheticTransactionId", () => {
   });
 
   it("returns true for exact-* prefixed identifiers", () => {
-    const syntheticIds = [
-      "exact-supported",
-      "exact-verify",
-      "exact-settle",
-      "exact-test-456"
-    ];
+    const syntheticIds = ["exact-supported", "exact-verify", "exact-settle", "exact-test-456"];
 
     syntheticIds.forEach((id) => {
       expect(isSyntheticTransactionId(id)).toBe(true);
@@ -253,8 +245,8 @@ describe("isSyntheticTransactionId", () => {
     // but would still be detected as synthetic if they're not valid hex
     const testIds = [
       "UPTO-supported", // uppercase prefix - still a upto prefix
-      "Upto-settle",    // mixed case prefix
-      "upTo-test"       // different case
+      "Upto-settle", // mixed case prefix
+      "upTo-test" // different case
     ];
 
     // These should be detected as invalid hashes (not valid hex), hence synthetic
@@ -289,7 +281,7 @@ describe("isSyntheticTransactionId", () => {
     const syntheticIds = [
       "8b54ad6f02d48fef51d92f2db1a4d4d069e9449ce9a4f27b9a6c6e6d88f9d63!", // trailing exclamation
       "8b54ad6f-02d48fef-51d92f2d-b1a4d4d0-69e9449c-e9a4f27b-9a6c6e6d-88f9d631", // hyphens
-      "8b54ad6f_02d48fef_51d92f2d_b1a4d4d0_69e9449c_e9a4f27b_9a6c6e6d_88f9d631"  // underscores
+      "8b54ad6f_02d48fef_51d92f2d_b1a4d4d0_69e9449c_e9a4f27b_9a6c6e6d_88f9d631" // underscores
     ];
 
     syntheticIds.forEach((id) => {
@@ -303,7 +295,11 @@ describe("isSyntheticTransactionId", () => {
       { id: "exact-verify", isTestData: true, category: "exact prefix" },
       { id: "playground_123", isTestData: true, category: "playground prefix" },
       { id: "invalid-format", isTestData: true, category: "non-hex string" },
-      { id: "8b54ad6f02d48fef51d92f2db1a4d4d069e9449ce9a4f27b9a6c6e6d88f9d631", isTestData: false, category: "valid hash" }
+      {
+        id: "8b54ad6f02d48fef51d92f2db1a4d4d069e9449ce9a4f27b9a6c6e6d88f9d631",
+        isTestData: false,
+        category: "valid hash"
+      }
     ];
 
     testCases.forEach(({ id, isTestData, category }) => {
@@ -343,7 +339,7 @@ describe("sanitizeReceiptForExport", () => {
       failureCode: null,
       failureReason: null,
       ledger: 67890,
-      network: "stellar:testnet",
+      network: baseAttempt.network,
       paymentAttemptId: "attempt_123",
       resourceId: "resource_abc",
       sellerId: "seller_xyz",
@@ -475,18 +471,22 @@ describe("sanitizeReceiptForExport", () => {
     expect(sanitized.receipt_created_at).toBeNull();
   });
 
-  it("handles missing settlement gracefully", () => {
+  it("falls back to the receipt transaction hash when settlement is missing", () => {
     const activity = createPaymentActivity({ settlement: undefined });
     const sanitized = sanitizeReceiptForExport(activity);
 
     expect(sanitized.settlement_id).toBeNull();
     expect(sanitized.ledger).toBeNull();
-    expect(sanitized.transaction_hash).toBeNull();
+    expect(sanitized.transaction_hash).toBe(
+      "8b54ad6f02d48fef51d92f2db1a4d4d069e9449ce9a4f27b9a6c6e6d88f9d631"
+    );
   });
 
   it("prefers settlement transactionHash over receipt transactionHash", () => {
-    const settlementHash = "settlement_hash_8b54ad6f02d48fef51d92f2db1a4d4d069e9449ce9a4f27b9a6c6e6d88f9d631";
-    const receiptHash = "receipt_hash_abc123def456abc123def456abc123def456abc123def456abc123def456abc1";
+    const settlementHash =
+      "settlement_hash_8b54ad6f02d48fef51d92f2db1a4d4d069e9449ce9a4f27b9a6c6e6d88f9d631";
+    const receiptHash =
+      "receipt_hash_abc123def456abc123def456abc123def456abc123def456abc123def456abc1";
 
     const activity = createPaymentActivity({
       settlement: {
@@ -505,7 +505,8 @@ describe("sanitizeReceiptForExport", () => {
   });
 
   it("falls back to receipt transactionHash if settlement is missing", () => {
-    const receiptHash = "receipt_hash_8b54ad6f02d48fef51d92f2db1a4d4d069e9449ce9a4f27b9a6c6e6d88f9d631";
+    const receiptHash =
+      "receipt_hash_8b54ad6f02d48fef51d92f2db1a4d4d069e9449ce9a4f27b9a6c6e6d88f9d631";
 
     const activity = createPaymentActivity({
       settlement: undefined,
@@ -561,7 +562,7 @@ describe("sanitizeReceiptForExport", () => {
 
     // All records should have the same field structure
     sanitized.forEach((record, index) => {
-      expect(Object.keys(record)).toEqual(Object.keys(sanitized[0]));
+      expect(Object.keys(record)).toEqual(Object.keys(sanitized[0]!));
       expect(record.attempt_id).toBe(`attempt_${index + 1}`);
     });
   });
@@ -744,7 +745,7 @@ describe("exportToJSON", () => {
 
   it("includes activeFilters in metadata", () => {
     const activities = [createPaymentActivity()];
-    const filters = { network: "stellar:testnet", status: "settled" as const };
+    const filters = { network: "stellar:testnet" as const, status: "settled" as const };
     const json = exportToJSON(activities, filters);
     const data = JSON.parse(json);
 
@@ -867,7 +868,7 @@ describe("exportToCSV", () => {
 
   it("includes active filters in CSV metadata", () => {
     const activities = [createPaymentActivity()];
-    const filters = { network: "stellar:testnet", status: "settled" as const };
+    const filters = { network: "stellar:testnet" as const, status: "settled" as const };
     const csv = exportToCSV(activities, filters);
 
     expect(csv).toContain("activeFilters_network,stellar:testnet");
@@ -1005,7 +1006,7 @@ describe("exportToCSV", () => {
       })
     ];
     const csv = exportToCSV(activities);
-    const lines = csv.split('\n');
+    const lines = csv.split("\n");
     const dataLine = lines[lines.length - 1];
 
     // Should have empty cells for null values
@@ -1063,7 +1064,7 @@ describe("exportToCSV", () => {
       createPaymentActivity({ attempt: { ...createPaymentActivity().attempt, id: "attempt_2" } })
     ];
     const csv = exportToCSV(activities);
-    const lines = csv.split('\n').filter(line => line.trim());
+    const lines = csv.split("\n").filter((line) => line.trim());
 
     // Metadata (5 lines) + empty line + header + 2 data rows
     expect(lines.length).toBeGreaterThanOrEqual(8);

@@ -414,7 +414,9 @@ export function simulateSettlement(
  * // Safe to show explorer link now
  * ```
  */
-export function markVerificationAsLive(verification: ApiPaymentVerification): PlaygroundVerification {
+export function markVerificationAsLive(
+  verification: ApiPaymentVerification
+): PlaygroundVerification {
   return {
     ...verification,
     dataMode: "live"

@@ -45,8 +45,7 @@ export const TESTNET_ACCOUNT_NOT_FOUND =
  * USDC asset issuer on testnet.
  * This is a synthetic issuer address used in test fixtures.
  */
-export const TESTNET_USDC_ISSUER =
-  "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
+export const TESTNET_USDC_ISSUER = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 
 /**
  * Horizon API response for account with sufficient USDC balance.
@@ -138,11 +137,56 @@ export function createAccountNativeOnly(): StellarAccountInfo {
 }
 
 /**
+ * Raw balance entry as returned by Horizon's account endpoint.
+ */
+type HorizonWireBalance = {
+  asset_type: "native" | "credit_alphanum4";
+  asset_code?: string;
+  asset_issuer?: string;
+  balance: string;
+  limit: string;
+};
+
+type HorizonWireAccount = {
+  balances: HorizonWireBalance[];
+  id: string;
+  sequence: string;
+};
+
+/** Convert a human-readable balance to the atomic units used for required amounts. */
+function toAtomicUnits(balance: string): string {
+  const [whole = "0", fraction = ""] = balance.split(".");
+  return `${whole}${fraction.slice(0, 6).padEnd(6, "0")}`.replace(/^0+(?=\d)/, "");
+}
+
+/** Translate a normalized fixture account into a realistic raw Horizon payload. */
+function toHorizonWireAccount(account: StellarAccountInfo): HorizonWireAccount {
+  return {
+    ...account,
+    balances: account.balances.map((balance) =>
+      balance.assetIssuer === null
+        ? {
+            asset_type: "native",
+            balance: toAtomicUnits(balance.balance),
+            limit: balance.limit
+          }
+        : {
+            asset_code: balance.assetCode,
+            asset_issuer: balance.assetIssuer,
+            asset_type: "credit_alphanum4",
+            balance: toAtomicUnits(balance.balance),
+            limit: balance.limit
+          }
+    )
+  };
+}
+
+/**
  * Mock Horizon API fetch response for account with sufficient balance.
  * Used for testing fetch-based account queries.
  */
 export function createHorizonResponseSufficientBalance(): Response {
-  const body = JSON.stringify(createAccountWithSufficientBalance());
+  const body = JSON.stringify(toHorizonWireAccount(createAccountWithSufficientBalance()));
   return new Response(body, {
     headers: { "Content-Type": "application/json" },
     status: 200
@@ -284,20 +328,21 @@ export type PreflightTestScenarioKey = keyof typeof preflightTestScenarios;
 
 /**
  * Mock fetch implementation for testing.
- * Returns synthetic Horizon API responses based on account public key.
+ * Returns synthetic raw Horizon API responses based on account public key.
  */
 export function createMockHorizonFetch(
   scenarios: Record<string, StellarAccountInfo>
 ): typeof fetch {
-  return async (url: string) => {
-    const urlStr = typeof url === "string" ? url : url.toString();
+  return async (input: RequestInfo | URL) => {
+    const urlStr =
+      typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
     const accountMatch = urlStr.match(/\/accounts\/([^/?]+)/);
 
     if (!accountMatch) {
       return createHorizonResponse500();
     }
 
-    const publicKey = decodeURIComponent(accountMatch[1]);
+    const publicKey = decodeURIComponent(accountMatch[1] ?? "");
 
     if (publicKey === TESTNET_ACCOUNT_NOT_FOUND) {
       return createHorizonResponse404();
@@ -308,7 +353,7 @@ export function createMockHorizonFetch(
       return createHorizonResponse404();
     }
 
-    const body = JSON.stringify(scenario);
+    const body = JSON.stringify(toHorizonWireAccount(scenario));
     return new Response(body, {
       headers: { "Content-Type": "application/json" },
       status: 200

@@ -181,7 +181,7 @@ test.describe("Payment Playground", () => {
       // Tab until we reach mode buttons
       for (let i = 0; i < 10; i++) {
         const focused = await page.evaluate(() => {
-          const el = document.activeElement as any;
+          const el = document.activeElement;
           return el?.textContent?.includes("Live") || el?.textContent?.includes("Simulation");
         });
 
@@ -293,7 +293,7 @@ test.describe("Payment Playground", () => {
       // Wait for error to appear
       // In real test: would intercept Horizon and return account with no USDC trustline
       // Error badge should show
-      await expect(page.getByText(/TRUSTLINE_REQUIRED|trustline/, { timeout: 5000 })).toBeVisible();
+      await expect(page.getByText(/TRUSTLINE_REQUIRED|trustline/)).toBeVisible({ timeout: 5000 });
     });
 
     test("should show asset details in trustline error", async ({ page }) => {
@@ -340,9 +340,9 @@ test.describe("Payment Playground", () => {
       await checkButton.click();
 
       // Error should indicate insufficient balance
-      await expect(
-        page.getByText(/INSUFFICIENT_BALANCE|Insufficient balance/, { timeout: 5000 })
-      ).toBeVisible();
+      await expect(page.getByText(/INSUFFICIENT_BALANCE|Insufficient balance/)).toBeVisible({
+        timeout: 5000
+      });
     });
 
     test("should show balance details in insufficient balance error", async ({ page }) => {
@@ -412,7 +412,7 @@ test.describe("Payment Playground", () => {
       await checkButton.click();
 
       // Should show account not found error
-      await expect(page.getByText(/not found|ACCOUNT_NOT_FOUND/, { timeout: 5000 })).toBeVisible();
+      await expect(page.getByText(/not found|ACCOUNT_NOT_FOUND/)).toBeVisible({ timeout: 5000 });
     });
 
     test("should display network error on API failure", async ({ page, context }) => {
@@ -428,9 +428,9 @@ test.describe("Payment Playground", () => {
       await checkButton.click();
 
       // Should show network error
-      await expect(
-        page.getByText(/NETWORK_ERROR|Network error|network|unavailable/, { timeout: 5000 })
-      ).toBeVisible();
+      await expect(page.getByText(/NETWORK_ERROR|Network error|network|unavailable/)).toBeVisible({
+        timeout: 5000
+      });
     });
 
     test("should display error with warning/amber styling", async ({ page }) => {
@@ -462,8 +462,12 @@ test.describe("Payment Playground", () => {
       // First, change selected resource
       const resourceSelect = page.locator("select").first();
       const options = await resourceSelect.locator("option").all();
-      if (options.length > 1) {
-        await resourceSelect.selectOption(options[1].getAttribute("value") as string);
+      const secondOption = options[1];
+      if (secondOption) {
+        const value = await secondOption.getAttribute("value");
+        if (value) {
+          await resourceSelect.selectOption(value);
+        }
       }
 
       // Then perform preflight check

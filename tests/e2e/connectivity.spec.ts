@@ -18,13 +18,15 @@ test.describe("Production API Connectivity", () => {
     // Get frontend commit from page context
     const context = await browser.newContext();
     const page = await context.newPage();
-    
+
     // Capture frontend environment info
     await page.goto("/");
     frontendCommit = await page.evaluate(() => {
       // Try to get from meta tag if available
-      return (document.querySelector('meta[name="x-frontend-commit"]') as HTMLMetaElement)
-        ?.content || "unknown";
+      return (
+        (document.querySelector('meta[name="x-frontend-commit"]') as HTMLMetaElement)?.content ||
+        "unknown"
+      );
     });
 
     await context.close();
@@ -33,18 +35,19 @@ test.describe("Production API Connectivity", () => {
   test("health endpoint returns 200 with ready status", async ({ page }) => {
     // Get API URL from runtime config
     const apiUrl = await page.evaluate(() => {
-      const script = Array.from(document.querySelectorAll("script")).find(s =>
+      const script = Array.from(document.querySelectorAll("script")).find((s) =>
         s.textContent?.includes("NEXT_PUBLIC_LUMENBAZAAR_API_URL")
       );
-      return script?.textContent
-        ?.match(/NEXT_PUBLIC_LUMENBAZAAR_API_URL['":\s]+([^"'\s,]+)/)?.[1]
-        || new URL(document.documentElement.baseURI).origin;
+      return (
+        script?.textContent?.match(/NEXT_PUBLIC_LUMENBAZAAR_API_URL['":\s]+([^"'\s,]+)/)?.[1] ||
+        new URL(document.documentElement.baseURI).origin
+      );
     });
 
     apiBaseUrl = apiUrl;
 
     const healthResponse = await page.request.get(`${apiUrl}/ready`);
-    
+
     expect(healthResponse.status()).toBe(200);
     expect(healthResponse.headers()["content-type"]).toContain("application/json");
 

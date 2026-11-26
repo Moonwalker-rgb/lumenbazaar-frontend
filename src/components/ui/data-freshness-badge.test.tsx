@@ -1,8 +1,12 @@
-import { render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { DataFreshnessBadge, dataFreshnessState, getResultAge, isResultStale } from "./data-freshness-badge";
+import {
+  DataFreshnessBadge,
+  dataFreshnessState,
+  getResultAge,
+  isResultStale
+} from "./data-freshness-badge";
 
 describe("dataFreshnessState", () => {
   const observedAt = "2026-10-07T12:00:00.000Z";
@@ -58,16 +62,25 @@ describe("isResultStale", () => {
 describe("DataFreshnessBadge", () => {
   const observedAt = "2026-10-07T12:00:00.000Z";
 
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.parse(observedAt) + 90_000);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("renders badge with freshness label for fresh results", () => {
-    render(
-      <DataFreshnessBadge observedAt={observedAt} source="api" />
-    );
+    vi.setSystemTime(Date.parse(observedAt) + 30_000);
+    render(<DataFreshnessBadge observedAt={observedAt} source="api" />);
 
     expect(screen.getByText(/Fresh · observed/)).toBeInTheDocument();
   });
 
-  it("renders badge with stale label and refresh button for stale results", async () => {
+  it("renders badge with stale label and refresh button for stale results", () => {
     const now = Date.parse(observedAt) + 90_000;
+    vi.setSystemTime(now);
     const onRefresh = vi.fn();
 
     render(
@@ -80,26 +93,21 @@ describe("DataFreshnessBadge", () => {
       { hydrate: false }
     );
 
-    // Mock Date.now for this test
-    const originalDateNow = Date.now;
-    global.Date.now = () => now;
-
     // Trigger the interval update
-    vi.runAllTimers();
-
-    global.Date.now = originalDateNow;
+    act(() => {
+      vi.advanceTimersByTime(30_000);
+    });
 
     const refreshButton = screen.getByRole("button", { name: /Refresh/ });
     expect(refreshButton).toBeInTheDocument();
     expect(screen.getByText(/Potentially stale · observed/)).toBeInTheDocument();
 
-    await userEvent.click(refreshButton);
+    fireEvent.click(refreshButton);
     expect(onRefresh).toHaveBeenCalled();
   });
 
   it("disables refresh button when isRefreshing is true", () => {
     const onRefresh = vi.fn();
-    const now = Date.parse(observedAt) + 90_000;
 
     render(
       <DataFreshnessBadge
@@ -115,8 +123,6 @@ describe("DataFreshnessBadge", () => {
   });
 
   it("shows loading spinner while refreshing", () => {
-    const now = Date.parse(observedAt) + 90_000;
-
     render(
       <DataFreshnessBadge
         observedAt={observedAt}
@@ -127,32 +133,20 @@ describe("DataFreshnessBadge", () => {
     );
 
     const refreshButton = screen.getByRole("button", { name: /Refresh/ });
-    expect(within(refreshButton).getByRole("img", { hidden: true })).toHaveClass("animate-spin");
+    expect(within(refreshButton).getByText("Refreshing")).toBeInTheDocument();
+    expect(refreshButton.querySelector("svg")).toHaveClass("animate-spin");
   });
 
   it("does not show refresh button for demo source", () => {
     const onRefresh = vi.fn();
 
-    render(
-      <DataFreshnessBadge
-        observedAt={observedAt}
-        source="demo"
-        onRefresh={onRefresh}
-      />
-    );
+    render(<DataFreshnessBadge observedAt={observedAt} source="demo" onRefresh={onRefresh} />);
 
     expect(screen.queryByRole("button", { name: /Refresh/ })).not.toBeInTheDocument();
   });
 
   it("does not show refresh button when onRefresh is not provided", () => {
-    const now = Date.parse(observedAt) + 90_000;
-
-    render(
-      <DataFreshnessBadge
-        observedAt={observedAt}
-        source="api"
-      />
-    );
+    render(<DataFreshnessBadge observedAt={observedAt} source="api" />);
 
     expect(screen.queryByRole("button", { name: /Refresh/ })).not.toBeInTheDocument();
   });

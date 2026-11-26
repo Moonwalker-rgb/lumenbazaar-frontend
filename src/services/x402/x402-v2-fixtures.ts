@@ -40,7 +40,7 @@ export const validExactRequirement = {
 export const validExactRequirementPubnet = {
   ...validExactRequirement,
   network: "stellar:pubnet" as const,
-  payTo: "GCNY5OXYSY4FZLOWIBBCJ3GDUGDYF5WUHCYOEV23W5VH2UOKYQRXW53"
+  payTo: "GCNY5OXYSY4FZLOWIBBCJ3GDUGDYF5WUHCYOEV23W5VH2UOKYQRXW53A"
 } as const;
 
 /**
@@ -121,7 +121,7 @@ export const validPaymentRequiredV2MultiNetwork: PaymentRequired = {
     {
       ...validExactRequirement,
       network: "stellar:pubnet",
-      payTo: "GCNY5OXYSY4FZLOWIBBCJ3GDUGDYF5WUHCYOEV23W5VH2UOKYQRXW53"
+      payTo: "GCNY5OXYSY4FZLOWIBBCJ3GDUGDYF5WUHCYOEV23W5VH2UOKYQRXW53A"
     }
   ] as never[],
   resource: {

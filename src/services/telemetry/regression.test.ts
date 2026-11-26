@@ -3,7 +3,12 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { DefaultTelemetryService } from "./index";
 import { NoOpSink } from "./sink";
 import { containsSensitiveData } from "./redaction";
-import type { TelemetryConfig } from "./types";
+import type { TelemetryConfig, TelemetryEvent, TelemetryEventData } from "./types";
+
+/** Read a field from a collected payload, including fields that should have been stripped. */
+function payloadField(data: TelemetryEvent["data"] | undefined, field: string): unknown {
+  return data === undefined ? undefined : (data as unknown as Record<string, unknown>)[field];
+}
 
 /**
  * Regression test: capture representative payment and wallet flow events,
@@ -35,8 +40,8 @@ describe("Telemetry Regression: Sensitive Data Scanning", () => {
           status: "initiated",
           errorCode: null,
           // Try to inject wallet address (should be rejected)
-          walletAddress: walletAddress as any
-        }
+          walletAddress
+        } as TelemetryEventData
       });
 
       // Event should have been rejected
@@ -57,7 +62,7 @@ describe("Telemetry Regression: Sensitive Data Scanning", () => {
 
       const events = service.getCollectedEvents();
       expect(events).toHaveLength(1);
-      expect((events[0].data as any).errorCode).toBe("WALLET_REJECTED");
+      expect(payloadField(events[0]?.data, "errorCode")).toBe("WALLET_REJECTED");
     });
   });
 
@@ -71,17 +76,17 @@ describe("Telemetry Regression: Sensitive Data Scanning", () => {
           resourceType: "service",
           assetCode: "USDC",
           // Try to inject receipt or resource ID (should be stripped)
-          receiptId: "receipt_123" as any,
-          resourceId: "resource_456" as any
-        }
+          receiptId: "receipt_123",
+          resourceId: "resource_456"
+        } as TelemetryEventData
       });
 
       const events = service.getCollectedEvents();
       expect(events).toHaveLength(1);
-      expect(events[0].data).toHaveProperty("resourceType");
-      expect(events[0].data).toHaveProperty("assetCode");
-      expect((events[0].data as any).receiptId).toBeUndefined();
-      expect((events[0].data as any).resourceId).toBeUndefined();
+      expect(events[0]?.data).toHaveProperty("resourceType");
+      expect(events[0]?.data).toHaveProperty("assetCode");
+      expect(payloadField(events[0]?.data, "receiptId")).toBeUndefined();
+      expect(payloadField(events[0]?.data, "resourceId")).toBeUndefined();
     });
 
     it("should not leak signatures in error events", () => {
@@ -93,14 +98,14 @@ describe("Telemetry Regression: Sensitive Data Scanning", () => {
           errorCategory: "INVALID_SIGNATURE",
           duration_ms: 500,
           // Try to inject signature (should be rejected at allowlist step, then redaction)
-          signature: "A".repeat(128) as any
-        }
+          signature: "A".repeat(128)
+        } as TelemetryEventData
       });
 
       const events = service.getCollectedEvents();
       expect(events).toHaveLength(1);
       // Signature field should be stripped
-      expect((events[0].data as any).signature).toBeUndefined();
+      expect(payloadField(events[0]?.data, "signature")).toBeUndefined();
     });
   });
 
@@ -113,15 +118,15 @@ describe("Telemetry Regression: Sensitive Data Scanning", () => {
           type: "payment_authorized",
           duration_ms: 2000,
           // Try to inject XDR-like values (should be rejected)
-          signedXDR: "A".repeat(200) as any,
-          transactionHash: "A".repeat(64) as any
-        }
+          signedXDR: "A".repeat(200),
+          transactionHash: "A".repeat(64)
+        } as TelemetryEventData
       });
 
       const events = service.getCollectedEvents();
       expect(events).toHaveLength(1);
-      expect((events[0].data as any).signedXDR).toBeUndefined();
-      expect((events[0].data as any).transactionHash).toBeUndefined();
+      expect(payloadField(events[0]?.data, "signedXDR")).toBeUndefined();
+      expect(payloadField(events[0]?.data, "transactionHash")).toBeUndefined();
     });
   });
 
@@ -134,15 +139,15 @@ describe("Telemetry Regression: Sensitive Data Scanning", () => {
           type: "settlement_completed",
           duration_ms: 3000,
           // Try to inject sensitive IDs (should be stripped)
-          receiptId: "receipt_xyz" as any,
-          correlationId: "corr_abc" as any
-        }
+          receiptId: "receipt_xyz",
+          correlationId: "corr_abc"
+        } as TelemetryEventData
       });
 
       const events = service.getCollectedEvents();
       expect(events).toHaveLength(1);
-      expect((events[0].data as any).receiptId).toBeUndefined();
-      expect((events[0].data as any).correlationId).toBeUndefined();
+      expect(payloadField(events[0]?.data, "receiptId")).toBeUndefined();
+      expect(payloadField(events[0]?.data, "correlationId")).toBeUndefined();
     });
   });
 
@@ -156,15 +161,15 @@ describe("Telemetry Regression: Sensitive Data Scanning", () => {
           errorCategory: "NETWORK_ERROR",
           source: "payment_component",
           // Try to inject raw error message (should be stripped or rejected)
-          errorMessage: "Failed to verify with wallet GDZST3... at line 45" as any,
-          stackTrace: "at function() at wallet.js:123" as any
-        }
+          errorMessage: "Failed to verify with wallet GDZST3... at line 45",
+          stackTrace: "at function() at wallet.js:123"
+        } as TelemetryEventData
       });
 
       const events = service.getCollectedEvents();
       expect(events).toHaveLength(1);
-      expect((events[0].data as any).errorMessage).toBeUndefined();
-      expect((events[0].data as any).stackTrace).toBeUndefined();
+      expect(payloadField(events[0]?.data, "errorMessage")).toBeUndefined();
+      expect(payloadField(events[0]?.data, "stackTrace")).toBeUndefined();
     });
   });
 
@@ -179,7 +184,7 @@ describe("Telemetry Regression: Sensitive Data Scanning", () => {
         data: {
           type: "ui_error_displayed",
           errorCategory: "UNKNOWN_ERROR",
-          source: stellarAddress as any // Try to inject address into "source"
+          source: stellarAddress // Try to inject address into "source"
         }
       });
 
@@ -196,7 +201,7 @@ describe("Telemetry Regression: Sensitive Data Scanning", () => {
         data: {
           type: "ui_error_displayed",
           errorCategory: "UNKNOWN_ERROR",
-          source: signature as any // Try to inject signature into "source"
+          source: signature // Try to inject signature into "source"
         }
       });
 
@@ -213,7 +218,7 @@ describe("Telemetry Regression: Sensitive Data Scanning", () => {
         data: {
           type: "ui_error_displayed",
           errorCategory: "UNKNOWN_ERROR",
-          source: txHash as any
+          source: txHash
         }
       });
 
@@ -253,7 +258,7 @@ describe("Telemetry Regression: Sensitive Data Scanning", () => {
         }
       ];
 
-      validEvents.forEach((event) => service.emit(event as any));
+      validEvents.forEach((event) => service.emit(event));
 
       const events = service.getCollectedEvents();
       expect(events).toHaveLength(3);

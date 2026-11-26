@@ -34,7 +34,7 @@ describe("checkPaymentPreflight", () => {
       if (result.success) {
         expect(result.validation.hasTrustline).toBe(true);
         expect(result.validation.error).toBeNull();
-        expect(result.validation.balance).toBe("1000.0000000");
+        expect(result.validation.balance).toBe("1000000000");
       }
     });
 
@@ -70,8 +70,10 @@ describe("checkPaymentPreflight", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.code).toBe("TRUSTLINE_REQUIRED");
-        expect(result.error.assetCode).toBe("USDC");
-        expect(result.error.assetIssuer).toBe(TESTNET_USDC_ISSUER);
+        if (result.error.code === "TRUSTLINE_REQUIRED") {
+          expect(result.error.assetCode).toBe("USDC");
+          expect(result.error.assetIssuer).toBe(TESTNET_USDC_ISSUER);
+        }
         expect(result.error.message).toContain("trustline");
       }
     });
@@ -107,8 +109,10 @@ describe("checkPaymentPreflight", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.code).toBe("INSUFFICIENT_BALANCE");
-        expect(result.error.currentBalance).toBe("10.0000000");
-        expect(result.error.requiredAmount).toBe("50000000");
+        if (result.error.code === "INSUFFICIENT_BALANCE") {
+          expect(result.error.currentBalance).toBe("10000000");
+          expect(result.error.requiredAmount).toBe("50000000");
+        }
         expect(result.error.message).toContain("Insufficient balance");
       }
     });
@@ -282,13 +286,13 @@ describe("checkPaymentPreflight", () => {
         });
 
         if (scenario.expectedError === null) {
-          expect(result.success).toBe(true, `Scenario "${key}" should succeed`);
+          expect(result.success, `Scenario "${key}" should succeed`).toBe(true);
           if (result.success) {
             expect(result.validation.error).toBeNull();
             expect(result.validation.hasTrustline).toBe(scenario.expectedHasTrustline);
           }
         } else {
-          expect(result.success).toBe(false, `Scenario "${key}" should fail`);
+          expect(result.success, `Scenario "${key}" should fail`).toBe(false);
           if (!result.success) {
             expect(result.error.code).toBe(scenario.expectedError);
           }

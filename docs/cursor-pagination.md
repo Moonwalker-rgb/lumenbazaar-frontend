@@ -14,19 +14,19 @@ Located in `src/hooks/useCursorPagination.ts`, this reusable React hook encapsul
 
 ```typescript
 const {
-  rows,              // Current page items (deduplicated)
-  isLoading,         // Loading state during fetch
-  error,             // Error state (if any)
-  hasNextPage,       // Can navigate forward
-  hasPreviousPage,   // Can navigate backward
-  nextPage,          // Function to navigate next
-  previousPage,      // Function to navigate previous
-  resetPagination    // Function to reset to first page
+  rows, // Current page items (deduplicated)
+  isLoading, // Loading state during fetch
+  error, // Error state (if any)
+  hasNextPage, // Can navigate forward
+  hasPreviousPage, // Can navigate backward
+  nextPage, // Function to navigate next
+  previousPage, // Function to navigate previous
+  resetPagination // Function to reset to first page
 } = useCursorPagination({
   queryFn: async (cursor?, direction?) => {
     // Fetch page and return { items, nextCursor?, previousCursor? }
   },
-  getKey: (item) => item.id,  // Stable ID for deduplication
+  getKey: (item) => item.id, // Stable ID for deduplication
   urlSearchParams: useSearchParams()
 });
 ```
@@ -34,35 +34,41 @@ const {
 ### Key Features
 
 #### 1. **Cursor Management**
+
 - Cursors are opaque tokens managed entirely by the backend
 - Client never constructs, modifies, or decodes cursors
 - Cursors are validated for format (max 1024 bytes, valid UTF-8)
 - Invalid cursors are treated as first-page requests
 
 #### 2. **URL Persistence**
+
 - Cursor and direction stored in URL query params
 - `?cursor=<token>&direction=forward` or `?cursor=<token>&direction=backward`
 - Browser back/forward buttons restore correct page
 - URL can be shared and restored on reload
 
 #### 3. **Deduplication**
+
 - Rows deduplicated by stable key using `getKey` extractor
 - Deduplication preserves backend ordering (no reordering)
 - Prevents duplicates across refetches and page transitions
 - Implements O(1) dedup with `Set<string>` for performance
 
 #### 4. **Error Handling**
+
 - **Stale cursor:** Backend returns 400 → Shows error → Resets to first page
 - **Malformed cursor:** Invalid format → Silent recovery → Treats as first page
 - **Network error:** Connection failed → Shows error with retry option
 - **Graceful recovery:** All errors reset to recoverable state
 
 #### 5. **Race Condition Prevention**
+
 - Uses `AbortController` to cancel old fetches when new navigation occurs
 - Latest request always wins; older requests are discarded
 - 30-second timeout to prevent hanging requests
 
 #### 6. **Non-Destructive Loading**
+
 - Loading indicator (spinner + overlay) does not blank the table
 - Existing rows remain visible during page transition
 - `aria-busy="true"` announced to screen readers
@@ -158,15 +164,23 @@ export function SellerPayments({ sellerId }: { sellerId: string }) {
   const searchParams = useSearchParams();
   const previousSellerIdRef = useRef(sellerId);
 
-  const { rows, isLoading, error, hasNextPage, hasPreviousPage, nextPage, previousPage, resetPagination } =
-    useCursorPagination({
-      queryFn: async (cursor) => {
-        const activity = loadSellerPaymentActivity(sellerId);
-        // Return paginated response
-      },
-      getKey: (item) => item.attempt.id,
-      urlSearchParams: searchParams as any
-    });
+  const {
+    rows,
+    isLoading,
+    error,
+    hasNextPage,
+    hasPreviousPage,
+    nextPage,
+    previousPage,
+    resetPagination
+  } = useCursorPagination({
+    queryFn: async (cursor) => {
+      const activity = loadSellerPaymentActivity(sellerId);
+      // Return paginated response
+    },
+    getKey: (item) => item.attempt.id,
+    urlSearchParams: searchParams as any
+  });
 
   // Reset if sellerId prop changes
   if (previousSellerIdRef.current !== sellerId) {
@@ -187,7 +201,7 @@ From backend API:
 ```typescript
 interface PaginatedResponse<T> {
   items: T[];
-  nextCursor?: string;  // Undefined if on final page
+  nextCursor?: string; // Undefined if on final page
   previousCursor?: string; // Undefined if on first page
 }
 ```
@@ -249,47 +263,51 @@ When filters change, pagination must reset:
 ```typescript
 // Track previous filters
 const previousFiltersRef = useRef(paginationFilters);
-const filtersChanged = JSON.stringify(previousFiltersRef.current) !== JSON.stringify(paginationFilters);
+const filtersChanged =
+  JSON.stringify(previousFiltersRef.current) !== JSON.stringify(paginationFilters);
 
 // Reset when filters change
 if (filtersChanged) {
-  resetPagination();  // Clears cursor from URL
+  resetPagination(); // Clears cursor from URL
   previousFiltersRef.current = paginationFilters;
 }
 ```
 
 ### Error Recovery
 
-| Error | Cause | Recovery |
-|-------|-------|----------|
-| **Stale Cursor** | Cursor expired or invalid on backend | Show banner, reset to first page |
-| **Malformed Cursor** | Invalid format (too long, bad UTF-8) | Silent reset, treat as first page |
-| **Network Error** | Connection failed, timeout | Show error, allow retry |
-| **Invalid Response** | Backend response doesn't match schema | Show error, reset to first page |
+| Error                | Cause                                 | Recovery                          |
+| -------------------- | ------------------------------------- | --------------------------------- |
+| **Stale Cursor**     | Cursor expired or invalid on backend  | Show banner, reset to first page  |
+| **Malformed Cursor** | Invalid format (too long, bad UTF-8)  | Silent reset, treat as first page |
+| **Network Error**    | Connection failed, timeout            | Show error, allow retry           |
+| **Invalid Response** | Backend response doesn't match schema | Show error, reset to first page   |
 
 ### URL Management
 
 Hook updates URL using Next.js navigation:
 
 ```typescript
-const updateUrl = useCallback((newCursor, direction) => {
-  const params = new URLSearchParams(searchParams);
+const updateUrl = useCallback(
+  (newCursor, direction) => {
+    const params = new URLSearchParams(searchParams);
 
-  if (newCursor) {
-    params.set("cursor", newCursor);
-  } else {
-    params.delete("cursor");
-  }
+    if (newCursor) {
+      params.set("cursor", newCursor);
+    } else {
+      params.delete("cursor");
+    }
 
-  if (direction) {
-    params.set("direction", direction);
-  } else {
-    params.delete("direction");
-  }
+    if (direction) {
+      params.set("direction", direction);
+    } else {
+      params.delete("direction");
+    }
 
-  const newUrl = `${window.location.pathname}?${params.toString()}`;
-  window.history.replaceState(null, "", newUrl);
-}, [searchParams]);
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, "", newUrl);
+  },
+  [searchParams]
+);
 ```
 
 ## Testing
@@ -297,6 +315,7 @@ const updateUrl = useCallback((newCursor, direction) => {
 ### Unit Tests
 
 Tests cover:
+
 - Initial load with no cursor
 - Next/previous page navigation
 - Deduplication by stable key
@@ -311,6 +330,7 @@ Location: `src/hooks/useCursorPagination.test.ts`
 ### Integration Tests
 
 Verify:
+
 - Empty first page behavior
 - Final page disables next
 - First page disables previous
@@ -321,6 +341,7 @@ Verify:
 ### E2E Tests (Playwright)
 
 Test coverage:
+
 - Desktop pagination flow
 - Mobile viewport (375px)
 - Browser back/forward restoration
@@ -431,11 +452,13 @@ useEffect(() => {
 To add cursor pagination to a new component:
 
 1. **Import hook:**
+
    ```typescript
    import { useCursorPagination } from "@/hooks/useCursorPagination";
    ```
 
 2. **Add query function:**
+
    ```typescript
    const { rows, isLoading, hasNextPage, ... } = useCursorPagination({
      queryFn: async (cursor, direction) => {
@@ -452,6 +475,7 @@ To add cursor pagination to a new component:
    ```
 
 3. **Add pagination controls:**
+
    ```typescript
    <Button onClick={nextPage} disabled={!hasNextPage || isLoading}>
      Next
@@ -462,6 +486,7 @@ To add cursor pagination to a new component:
    ```
 
 4. **Add error handling:**
+
    ```typescript
    {error && (
      <ErrorBanner message={error.message} onRetry={resetPagination} />

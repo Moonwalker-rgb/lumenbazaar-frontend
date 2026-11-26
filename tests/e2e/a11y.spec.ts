@@ -18,10 +18,14 @@
  */
 
 import { expect, test } from "@playwright/test";
-import { injectAxe, checkA11y, getViolations } from "axe-playwright";
+import { AxeBuilder } from "@axe-core/playwright";
 import { PRIMARY_ROUTES, EXCLUDED_ROUTES } from "../fixtures/routes";
 import { runSharedAssertions, getPageContext } from "../fixtures/accessibility";
-import { A11Y_EXCEPTIONS, getExceptionsForRoute, validateExceptions } from "../fixtures/a11y-exceptions";
+import {
+  A11Y_EXCEPTIONS,
+  getExceptionsForRoute,
+  validateExceptions
+} from "../fixtures/a11y-exceptions";
 
 // Validate exceptions framework on test run
 test.beforeAll(() => {
@@ -86,21 +90,9 @@ test.describe("Accessibility - Axe Scanning", () => {
         // Wait for page to stabilize
         await page.waitForLoadState("networkidle");
 
-        // Inject axe into page
-        await injectAxe(page);
-
-        // Run axe check (will throw if violations found)
-        const results = await page.evaluate(() => {
-          return new Promise((resolve) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (window as any).axe.run((results: any) => {
-              resolve(results);
-            });
-          });
-        });
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const violations = (results as any).violations || [];
+        // Run axe check (injects axe-core and returns typed results)
+        const results = await new AxeBuilder({ page }).analyze();
+        const violations = results.violations;
 
         // Get exceptions for this route
         const exceptions = getExceptionsForRoute(route.path);
@@ -108,7 +100,7 @@ test.describe("Accessibility - Axe Scanning", () => {
         // Filter out exceptions
         let filteredViolations = violations;
         if (exceptions.length > 0) {
-          filteredViolations = violations.filter((v: any) => {
+          filteredViolations = violations.filter((v) => {
             return !exceptions.some((exc) => exc.ruleId === v.id);
           });
 
@@ -121,7 +113,7 @@ test.describe("Accessibility - Axe Scanning", () => {
         if (filteredViolations.length > 0) {
           const violationDetails = filteredViolations
             .map(
-              (v: any) =>
+              (v) =>
                 `\n  Rule: ${v.id}\n  Impact: ${v.impact}\n  Nodes: ${v.nodes.length}\n  Description: ${v.description}`
             )
             .join("\n");
@@ -134,7 +126,7 @@ test.describe("Accessibility - Axe Scanning", () => {
         // Verify no stale exceptions (exception added but no violation found)
         if (exceptions.length > 0) {
           for (const exc of exceptions) {
-            const violationExists = violations.some((v: any) => v.id === exc.ruleId);
+            const violationExists = violations.some((v) => v.id === exc.ruleId);
             if (!violationExists) {
               throw new Error(
                 `Stale exception: rule "${exc.ruleId}" on ${route.path} does not match any violation. Remove this exception.`
@@ -179,9 +171,7 @@ test.describe("Route Coverage Guard", () => {
         if (r.pattern === href) return true;
         if (r.pattern.includes("*")) {
           // Basic glob support
-          const regex = new RegExp(
-            `^${r.pattern.replace(/\*/g, ".*").replace(/\?/g, ".")}$`
-          );
+          const regex = new RegExp(`^${r.pattern.replace(/\*/g, ".*").replace(/\?/g, ".")}$`);
           return regex.test(href);
         }
         return false;

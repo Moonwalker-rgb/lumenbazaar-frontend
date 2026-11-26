@@ -66,12 +66,7 @@ export function ContractAddressComparison({
   const addressesMatch = registryEntry && registryEntry.contractId === contractId;
 
   return (
-    <div
-      className={
-        className ||
-        "rounded-md border border-slate-200 bg-slate-50 p-4 space-y-3"
-      }
-    >
+    <div className={className || "rounded-md border border-slate-200 bg-slate-50 p-4 space-y-3"}>
       {/* Requirement Contract Address */}
       <div>
         <dt className="text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -107,12 +102,8 @@ export function ContractAddressComparison({
             </dt>
             <dd className="mt-2 space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-slate-900">
-                  {registryEntry.symbol}
-                </span>
-                <span className="text-xs text-slate-500">
-                  decimals: {registryEntry.decimals}
-                </span>
+                <span className="text-sm font-semibold text-slate-900">{registryEntry.symbol}</span>
+                <span className="text-xs text-slate-500">decimals: {registryEntry.decimals}</span>
                 {registryEntry.issuer && (
                   <span className="text-xs text-slate-500">
                     issuer: {registryEntry.issuer.slice(0, 8)}...
@@ -154,8 +145,8 @@ export function ContractAddressComparison({
         <>
           <div className="border-t border-slate-200" />
           <p className="text-xs text-slate-500">
-            This contract address is not in the trusted registry for this network.
-            Verify the address before proceeding.
+            This contract address is not in the trusted registry for this network. Verify the
+            address before proceeding.
           </p>
         </>
       )}

@@ -15,9 +15,9 @@ Automated accessibility testing helps catch common WCAG 2.x Tevel A & AA violati
 
 **Important**: Automated scans are a first line of defense. They do not replace:
 
--  Manual accessibility review with assistive technologies (screen readers, keyboard navigation)
--  Expert WCAG conformance audits
--  User testing with people with disabilities
+- Manual accessibility review with assistive technologies (screen readers, keyboard navigation)
+- Expert WCAG conformance audits
+- User testing with people with disabilities
 
 ## Running Tests Locally
 
@@ -28,6 +28,7 @@ pnpm test:e2e:a11y
 ```
 
 This runs both:
+
 - Shared assertion checks (landmarks, headings, focus order, etc.)
 - Axe-core scans for WCAG violations
 
@@ -92,11 +93,12 @@ Every route is checked for:
 #### Axe-Core Scan (Every Route)
 
 Automated scan for WCAG 2.x Tevel A & AA violations, including:
+
 - Color contrast (4.5:1 for normal text, 3:1 for large text)
 - ARIA attributes and roles
--  Form labels and inputs
+- Form labels and inputs
 - Alt text for images
--  Link purposes
+- Link purposes
 - And 90+ more rules
 
 #### Wallet and Payment Flows (Focused Coverage)
@@ -129,7 +131,6 @@ When you add a new page to the app:
    ```
 
 3. **If violations are found**:
-
    - **Option A: Fix the defect** (preferred)
      - Ensure one `<main>` landmark
      - Provide proper `aria-label` for nav/regions
@@ -150,6 +151,7 @@ When you add a new page to the app:
 ## Adding/Renewing Exceptions
 
 Exceptions are for known, documented accessibility issues that:
+
 - Have a clear owner and remediation plan
 - Expire by a specific date (forcing review/renewal)
 - Are specific to a rule, route, and selector
@@ -161,12 +163,12 @@ Edit `tests/fixtures/a11y-exceptions.ts`:
 ```typescript
 export const A11Y_EXCEPTIONS: A11yException[] = [
   {
-    ruleId: "color-contrast",          // Axe rule ID
-    route: "/playground",              // Where the issue is
-    selector: ".data-mode-badge",      // CSS selector or description
+    ruleId: "color-contrast", // Axe rule ID
+    route: "/playground", // Where the issue is
+    selector: ".data-mode-badge", // CSS selector or description
     reason: "Placeholder badge styling for demo. Redesign planned Q4 2026.",
-    owner: "@ui-team",                 // Responsible party
-    expiryDate: "2026-12-31"          // ISO 8601 date (YYYY-MM-DD)
+    owner: "@ui-team", // Responsible party
+    expiryDate: "2026-12-31" // ISO 8601 date (YYYY-MM-DD)
   }
 ];
 ```
@@ -192,6 +194,7 @@ pnpm test
 ```
 
 This runs `tests/unit/a11y-exceptions.test.ts`, which checks:
+
 - No expired dates (expiryDate < today → test fails)
 - No stale exceptions (exception added but no violation found → test fails)
 - All required fields present (owner, expiryDate, reason)
@@ -230,6 +233,7 @@ Accessibility tests run automatically on every pull request:
 Tests run on both **desktop (Chrome)** and **mobile (Pixel 7)** viewports.
 
 To see CI results:
+
 1. Push your branch
 2. GitHub Actions runs `pnpm test:e2e:a11y`
 3. Check the PR checks for a11y test results
@@ -248,6 +252,7 @@ Accessibility violations found on /playground:
 ```
 
 **Fix**:
+
 1. Use browser DevTools to locate the element (use the selector if provided)
 2. Check background/foreground colors
 3. Adjust CSS to meet 4.5:1 ratio (normal text) or 3:1 (large text)
@@ -258,6 +263,7 @@ Accessibility violations found on /playground:
 This means you added an exception for a violation that no longer exists.
 
 **Fix**:
+
 1. Remove the exception from `tests/fixtures/a11y-exceptions.ts`
 2. Re-run test
 
@@ -266,6 +272,7 @@ This means you added an exception for a violation that no longer exists.
 The expiry date has passed.
 
 **Fix**:
+
 1. Either remove the exception (fix complete) or update the expiry date with a new target date
 2. Update the `reason` to explain the delay
 3. Re-run test
@@ -275,6 +282,7 @@ The expiry date has passed.
 The test might be waiting for a network request that's unavailable. Demo mode fixtures are used by default; live APIs are not queried.
 
 **Fix**:
+
 1. Check if the route requires login or specific state
 2. Add setup/fixture data to `PRIMARY_ROUTES` if needed
 3. Or skip the route with a documented reason in `PRIMARY_ROUTES`
@@ -309,14 +317,15 @@ For payment and wallet flows, record the following manual checks in your PR desc
 ## Resources
 
 - [WCAG 2.1 Overview](https://www.w3.org/WAI/WCAG21/quickref/)
--  [Axe Rules](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md)
+- [Axe Rules](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md)
 - [MDN Accessibility](https://developer.mozilla.org/en-US/docs/Web/Accessibility)
--  [WebAIM Articles](https://webaim.org/articles/)
--  [Deque's Accessibility Resources](https://www.deque.com/resources/)
+- [WebAIM Articles](https://webaim.org/articles/)
+- [Deque's Accessibility Resources](https://www.deque.com/resources/)
 
 ## Questions?
 
 Consult:
+
 1. This guide and linked resources
 2. Existing tests and comments in `tests/e2e/a11y.spec.ts`
 3. GitHub Issues tagged with `accessibility` or `a11y`

@@ -204,10 +204,7 @@ export function isValidNetworkId(network: string): boolean {
  * isValidTimeoutSeconds(999_999_999); // false (exceeds 1 week max)
  * ```
  */
-export function isValidTimeoutSeconds(
-  timeoutSeconds: number,
-  maxSeconds = 604_800
-): boolean {
+export function isValidTimeoutSeconds(timeoutSeconds: number, maxSeconds = 604_800): boolean {
   if (typeof timeoutSeconds !== "number") {
     return false;
   }

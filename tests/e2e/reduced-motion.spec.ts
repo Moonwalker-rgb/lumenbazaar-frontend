@@ -129,7 +129,9 @@ test.describe("Reduced Motion Mode", () => {
     // Check that motion duration token is set in CSS
     const hasMotionTokens = await page.evaluate(() => {
       const root = document.documentElement;
-      const motionDuration = getComputedStyle(root).getPropertyValue("--motion-duration-base").trim();
+      const motionDuration = getComputedStyle(root)
+        .getPropertyValue("--motion-duration-base")
+        .trim();
 
       // Should be reduced in reduced-motion mode
       return motionDuration !== "";
@@ -206,7 +208,9 @@ test.describe("Reduced Motion Mode", () => {
     await page.waitForLoadState("networkidle");
 
     // Start with reduced motion enabled
-    expect(await page.evaluate(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
+    expect(
+      await page.evaluate(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+    ).toBe(true);
 
     // Change to normal motion
     await page.emulateMedia({ reducedMotion: "no-preference" });

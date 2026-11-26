@@ -4,7 +4,7 @@ import type { AssetMetadata } from "@/config/networks";
 
 /**
  * Represents the trust status of a payment asset against the configured registry.
- * 
+ *
  * Trust is derived solely from the contract ID matching an entry in the network's
  * configured assets list. Symbol and issuer are never used to establish trust.
  */
@@ -54,10 +54,7 @@ export type AssetTrustStatus =
  * classifyAssetTrust("INVALID_ID", "stellar:testnet")
  * // => { type: "malformed", reason: "invalid_contract_id" }
  */
-export function classifyAssetTrust(
-  contractId: string,
-  network: NetworkId
-): AssetTrustStatus {
+export function classifyAssetTrust(contractId: string, network: NetworkId): AssetTrustStatus {
   // Step 1: Validate contract ID format
   if (!isValidSorobanContractId(contractId)) {
     return { type: "malformed", reason: "invalid_contract_id" };
@@ -65,9 +62,7 @@ export function classifyAssetTrust(
 
   // Step 2: Look up in network's registry
   const networkConfig = getNetworkConfig(network);
-  const registryEntry = networkConfig.assets.find(
-    (asset) => asset.contractId === contractId
-  );
+  const registryEntry = networkConfig.assets.find((asset) => asset.contractId === contractId);
 
   // Step 3: Return appropriate status
   if (registryEntry) {

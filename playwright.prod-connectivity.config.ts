@@ -2,10 +2,10 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Production deployment connectivity configuration.
- * 
+ *
  * Targets a deployed frontend and backend to verify production connectivity
  * without cross-origin failures and to validate API schema compliance.
- * 
+ *
  * Environment variables:
  * - LUMENBAZAAR_PROD_FRONTEND_URL: Deployed frontend URL (required)
  *   Example: https://lumenbazaar.vercel.app

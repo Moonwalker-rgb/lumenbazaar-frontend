@@ -92,7 +92,9 @@ function DemoPaymentPlayground() {
   const [paymentRequest, setPaymentRequest] = useState<PaymentPayload | null>(null);
   const [verification, setVerification] = useState<PlaygroundVerification | null>(null);
   const [settlement, setSettlement] = useState<PlaygroundSettlement | null>(null);
-  const [error, setError] = useState<{ code: string; message: string; retryable?: boolean } | null>(null);
+  const [error, setError] = useState<{ code: string; message: string; retryable?: boolean } | null>(
+    null
+  );
   const [preflightError, setPreflightError] = useState<PreflightCheckError | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<"simulation" | "wallet">("simulation");
@@ -103,17 +105,12 @@ function DemoPaymentPlayground() {
   const paidFlowOutcomeRef = useRef<HTMLDivElement | null>(null);
   const [announcement, setAnnouncement] = useState<string>("");
 
-  // Attempt to load live resources on mount
-  useEffect(() => {
-    loadLiveResourcesIfAvailable();
-  }, []);
-
   async function loadLiveResourcesIfAvailable() {
     setLoadingLiveResources(true);
     setApiLoadError(null);
     try {
       const resources = await apiClient.listResources();
-      setLiveResources(resources.data);
+      setLiveResources(resources.resources);
       // Switch to live mode if we successfully loaded resources
       setDataMode("live");
     } catch (caught) {
@@ -129,6 +126,13 @@ function DemoPaymentPlayground() {
       setLoadingLiveResources(false);
     }
   }
+
+  // Attempt to load live resources on mount
+  useEffect(() => {
+    queueMicrotask(() => {
+      void loadLiveResourcesIfAvailable();
+    });
+  }, []);
 
   useEffect(() => {
     if (announcement) {
@@ -170,8 +174,10 @@ function DemoPaymentPlayground() {
     [resource]
   );
 
-  function prepare(resource: Resource, authMode: PlaygroundAuthorizationMode = authMode) {
-    const nextRequest = buildPlaygroundPaymentRequest(resource, { authorizationMode: authMode });
+  function prepare(resource: Resource, requestedAuthMode: PlaygroundAuthorizationMode = authMode) {
+    const nextRequest = buildPlaygroundPaymentRequest(resource, {
+      authorizationMode: requestedAuthMode
+    });
 
     setChallenge(null);
     setAuthorization(null);
@@ -197,7 +203,7 @@ function DemoPaymentPlayground() {
       setLoadingLiveResources(true);
       try {
         const resources = await apiClient.listResources();
-        setLiveResources(resources.data);
+        setLiveResources(resources.resources);
       } catch (caught) {
         const normalized = normalizeUiError(caught, {
           code: "API_UNAVAILABLE",
@@ -335,11 +341,15 @@ function DemoPaymentPlayground() {
     setPaidFlowOutcome(null);
     setPaidFlowState(null);
     setBusy("challenge");
-    
+
     try {
       const supported = await apiClient.getSupported();
-      const expected = expectedTermsForResource(resource, supported, loadRuntimeConfig().defaultNetwork);
-      
+      const expected = expectedTermsForResource(
+        resource,
+        supported,
+        loadRuntimeConfig().defaultNetwork
+      );
+
       const nextChallenge = await requestPaymentChallenge(
         {
           headers: [["Accept", "application/json"]],
@@ -352,11 +362,12 @@ function DemoPaymentPlayground() {
       setMode("wallet");
       setAnnouncement("Live payment challenge received.");
     } catch (caught) {
-      const errorMsg = caught instanceof ChallengeError 
-        ? `${caught.code}: ${caught.message}`
-        : "CHALLENGE_FAILED: Could not fetch live payment challenge";
+      const errorMsg =
+        caught instanceof ChallengeError
+          ? `${caught.code}: ${caught.message}`
+          : "CHALLENGE_FAILED: Could not fetch live payment challenge";
       setError({
-        code: errorMsg.split(":")[0],
+        code: errorMsg.split(":")[0] ?? "CHALLENGE_FAILED",
         message: errorMsg,
         retryable: true
       });
@@ -371,17 +382,18 @@ function DemoPaymentPlayground() {
     setError(null);
     setAuthorization(null);
     setBusy("authorize");
-    
+
     try {
       const auth = await authorizePaymentChallenge(challenge);
       setAuthorization(auth);
       setAnnouncement("Wallet authorization complete.");
     } catch (caught) {
-      const errorMsg = caught instanceof AuthorizationError
-        ? `${caught.code}: ${caught.message}`
-        : "AUTHORIZATION_FAILED: Could not complete wallet authorization";
+      const errorMsg =
+        caught instanceof AuthorizationError
+          ? `${caught.code}: ${caught.message}`
+          : "AUTHORIZATION_FAILED: Could not complete wallet authorization";
       setError({
-        code: errorMsg.split(":")[0],
+        code: errorMsg.split(":")[0] ?? "AUTHORIZATION_FAILED",
         message: errorMsg,
         retryable: caught instanceof AuthorizationError && caught.code !== "WALLET_NETWORK_MISMATCH"
       });
@@ -396,7 +408,7 @@ function DemoPaymentPlayground() {
     setError(null);
     setPaidFlowOutcome(null);
     setBusy("paying");
-    
+
     try {
       const result = await paidFlowCoordinator.execute({
         authorization,
@@ -570,10 +582,15 @@ function DemoPaymentPlayground() {
             </CardHeader>
             <CardBody className="space-y-4">
               {paidFlowOutcome && paidFlowOutcome.state !== "confirmed" ? (
-                <div className="rounded-md border border-blue-200 bg-blue-50 p-3" ref={paidFlowOutcomeRef} tabIndex={-1}>
+                <div
+                  className="rounded-md border border-blue-200 bg-blue-50 p-3"
+                  ref={paidFlowOutcomeRef}
+                  tabIndex={-1}
+                >
                   <p className="text-sm font-medium text-blue-900">Recovered Payment</p>
                   <p className="mt-1 text-xs text-blue-800">
-                    An interrupted payment for this resource was recovered. State: {paidFlowOutcome.state}
+                    An interrupted payment for this resource was recovered. State:{" "}
+                    {paidFlowOutcome.state}
                   </p>
                   <button
                     className="mt-2 text-xs font-medium text-blue-700 hover:text-blue-900 underline"
@@ -624,7 +641,10 @@ function DemoPaymentPlayground() {
               {mode === "wallet" && challenge === null ? (
                 <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
                   <p className="font-medium">Live 402 Wallet Flow</p>
-                  <p className="mt-1 text-xs">Click "Live 402" to request the actual payment challenge from the resource, then authorize with Freighter.</p>
+                  <p className="mt-1 text-xs">
+                    Click &quot;Live 402&quot; to request the actual payment challenge from the
+                    resource, then authorize with Freighter.
+                  </p>
                 </div>
               ) : null}
 
@@ -693,7 +713,9 @@ function DemoPaymentPlayground() {
                     <div className="space-y-2">
                       <div className="rounded-md bg-white p-2">
                         <p className="text-xs font-medium text-slate-600">Authorized Account:</p>
-                        <p className="mt-1 break-all font-mono text-xs text-slate-900">{authorization.account}</p>
+                        <p className="mt-1 break-all font-mono text-xs text-slate-900">
+                          {authorization.account}
+                        </p>
                       </div>
                       <Button
                         className="w-full"
@@ -728,11 +750,14 @@ function DemoPaymentPlayground() {
             </CardHeader>
             <CardBody className="space-y-4">
               <p className="text-sm text-slate-600">
-                Enter a Stellar public key to validate that the account has the required trustline and sufficient balance before payment.
+                Enter a Stellar public key to validate that the account has the required trustline
+                and sufficient balance before payment.
               </p>
               <div className="space-y-3">
                 <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-slate-700">Public Key (G...)</span>
+                  <span className="mb-2 block text-sm font-medium text-slate-700">
+                    Public Key (G...)
+                  </span>
                   <input
                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
                     id="payer-public-key"
@@ -757,12 +782,19 @@ function DemoPaymentPlayground() {
               </div>
 
               {preflightError ? (
-                <div className="rounded-md border border-amber-200 bg-amber-50 p-3" ref={preflightErrorRef} role="alert" tabIndex={-1}>
+                <div
+                  className="rounded-md border border-amber-200 bg-amber-50 p-3"
+                  ref={preflightErrorRef}
+                  role="alert"
+                  tabIndex={-1}
+                >
                   <div className="flex items-start gap-2">
                     <AlertTriangle aria-hidden="true" className="mt-0.5 h-4 w-4 text-amber-700" />
                     <div className="flex-1">
                       <Badge tone="warning">{preflightError.code}</Badge>
-                      <p className="mt-2 text-sm leading-6 text-amber-800">{preflightError.message}</p>
+                      <p className="mt-2 text-sm leading-6 text-amber-800">
+                        {preflightError.message}
+                      </p>
                       {preflightError.code === "TRUSTLINE_REQUIRED" && (
                         <p className="mt-2 text-xs text-amber-700">
                           Asset: {preflightError.assetCode} ({preflightError.assetIssuer})
@@ -770,7 +802,8 @@ function DemoPaymentPlayground() {
                       )}
                       {preflightError.code === "INSUFFICIENT_BALANCE" && (
                         <p className="mt-2 text-xs text-amber-700">
-                          Balance: {preflightError.currentBalance} / Required: {preflightError.requiredAmount}
+                          Balance: {preflightError.currentBalance} / Required:{" "}
+                          {preflightError.requiredAmount}
                         </p>
                       )}
                     </div>
@@ -789,8 +822,18 @@ function DemoPaymentPlayground() {
             <CardBody className="space-y-3">
               <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
                 <span className="text-sm text-slate-600">Payment state</span>
-                <Badge tone={flowState === "confirmed" ? "success" : paidFlowState === "confirmed" ? "success" : "neutral"}>
-                  {paidFlowState ? paidFlowStateLabels[paidFlowState] : paymentFlowStateLabels[flowState]}
+                <Badge
+                  tone={
+                    flowState === "confirmed"
+                      ? "success"
+                      : paidFlowState === "confirmed"
+                        ? "success"
+                        : "neutral"
+                  }
+                >
+                  {paidFlowState
+                    ? paidFlowStateLabels[paidFlowState]
+                    : paymentFlowStateLabels[flowState]}
                 </Badge>
               </div>
 
@@ -801,15 +844,31 @@ function DemoPaymentPlayground() {
                   </div>
                   {paidFlowOutcome.receipt ? (
                     <div className="text-xs space-y-1 text-slate-700">
-                      <div><dt className="font-medium">Receipt ID:</dt><dd className="break-all">{paidFlowOutcome.receipt.id}</dd></div>
-                      <div><dt className="font-medium">Status:</dt><dd>{paidFlowOutcome.receipt.status}</dd></div>
-                      {paidFlowOutcome.receipt.ledger ? <div><dt className="font-medium">Ledger:</dt><dd>{paidFlowOutcome.receipt.ledger}</dd></div> : null}
+                      <div>
+                        <dt className="font-medium">Receipt ID:</dt>
+                        <dd className="break-all">{paidFlowOutcome.receipt.id}</dd>
+                      </div>
+                      <div>
+                        <dt className="font-medium">Status:</dt>
+                        <dd>{paidFlowOutcome.receipt.status}</dd>
+                      </div>
+                      {paidFlowOutcome.receipt.ledger ? (
+                        <div>
+                          <dt className="font-medium">Ledger:</dt>
+                          <dd>{paidFlowOutcome.receipt.ledger}</dd>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                   {paidFlowOutcome.transactionHash && paidFlowOutcome.receipt?.network ? (
                     <a
                       className="inline-flex min-h-8 items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-900 shadow-sm hover:bg-slate-50"
-                      href={explorerTransactionUrl(paidFlowOutcome.receipt.network, paidFlowOutcome.transactionHash)}
+                      href={
+                        explorerTransactionUrl(
+                          paidFlowOutcome.receipt.network,
+                          paidFlowOutcome.transactionHash
+                        ) ?? undefined
+                      }
                       rel="noreferrer"
                       target="_blank"
                     >
@@ -878,7 +937,9 @@ function DemoPaymentPlayground() {
               {settlement?.dataMode === "live" && settlement?.transaction ? (
                 <a
                   className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
-                  href={explorerTransactionUrl(settlement.network, settlement.transaction)}
+                  href={
+                    explorerTransactionUrl(settlement.network, settlement.transaction) ?? undefined
+                  }
                   rel="noreferrer"
                   target="_blank"
                 >
@@ -892,21 +953,36 @@ function DemoPaymentPlayground() {
               ) : null}
 
               {error ? (
-                <div className={`rounded-md border p-3 ${error.retryable ? "border-amber-200 bg-amber-50" : "border-red-200 bg-red-50"}`} ref={errorRegionRef} role="alert" tabIndex={-1}>
+                <div
+                  className={`rounded-md border p-3 ${error.retryable ? "border-amber-200 bg-amber-50" : "border-red-200 bg-red-50"}`}
+                  ref={errorRegionRef}
+                  role="alert"
+                  tabIndex={-1}
+                >
                   <div className="flex items-start gap-2">
-                    <AlertTriangle aria-hidden="true" className={`mt-0.5 h-4 w-4 ${error.retryable ? "text-amber-700" : "text-red-700"}`} />
+                    <AlertTriangle
+                      aria-hidden="true"
+                      className={`mt-0.5 h-4 w-4 ${error.retryable ? "text-amber-700" : "text-red-700"}`}
+                    />
                     <div className="flex-1">
                       <Badge tone={error.retryable ? "warning" : "danger"}>{error.code}</Badge>
-                      <p className={`mt-2 text-sm leading-6 ${error.retryable ? "text-amber-800" : "text-red-800"}`}>{error.message}</p>
+                      <p
+                        className={`mt-2 text-sm leading-6 ${error.retryable ? "text-amber-800" : "text-red-800"}`}
+                      >
+                        {error.message}
+                      </p>
                       {error.retryable ? (
                         <div className="mt-3 flex flex-wrap gap-2">
-                          <p className={`text-xs ${error.retryable ? "text-amber-700" : "text-red-700"}`}>This error is retryable.</p>
+                          <p
+                            className={`text-xs ${error.retryable ? "text-amber-700" : "text-red-700"}`}
+                          >
+                            This error is retryable.
+                          </p>
                           {challenge && !authorization ? (
                             <Button
                               className="h-auto py-1 px-2"
                               disabled={busy === "authorize"}
                               onClick={() => void authorizeLivePayment()}
-                              size="sm"
                               type="button"
                               variant="secondary"
                             >
@@ -915,7 +991,9 @@ function DemoPaymentPlayground() {
                           ) : null}
                         </div>
                       ) : (
-                        <p className="mt-2 text-xs text-red-700">This error requires user action before retry.</p>
+                        <p className="mt-2 text-xs text-red-700">
+                          This error requires user action before retry.
+                        </p>
                       )}
                     </div>
                   </div>

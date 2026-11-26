@@ -14,6 +14,8 @@ describe("PaymentRequirementViewer", () => {
     payTo: "GBRPYHIL2CI3WHZSKMHPPGYJRF7V4SGQLWJMNDT3XONU2CI6X3BLKVOY",
     resourceId: "resource_123"
   };
+  // Valid-format contract ID that is intentionally absent from the testnet registry.
+  const unknownContractId = "CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS";
 
   describe("trusted asset", () => {
     it("displays trusted asset with success badge", () => {
@@ -41,8 +43,8 @@ describe("PaymentRequirementViewer", () => {
       render(<PaymentRequirementViewer requirement={requirement} />);
 
       expect(
-        screen.getByText("CBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")
-      ).toBeInTheDocument();
+        screen.getAllByText("CBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE").length
+      ).toBeGreaterThan(0);
       expect(screen.getByText("Contract addresses match")).toBeInTheDocument();
     });
   });
@@ -52,7 +54,7 @@ describe("PaymentRequirementViewer", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
@@ -60,7 +62,7 @@ describe("PaymentRequirementViewer", () => {
 
       expect(screen.getByText("Unknown Asset")).toBeInTheDocument();
       expect(
-        screen.getByText(/not in the trusted registry/)
+        screen.getByText(/This payment asset is not in the trusted registry for/)
       ).toBeInTheDocument();
     });
 
@@ -68,25 +70,21 @@ describe("PaymentRequirementViewer", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
       render(<PaymentRequirementViewer requirement={requirement} />);
 
-      expect(
-        screen.getByText("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText(/not in the trusted registry for this network/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(unknownContractId)).toBeInTheDocument();
+      expect(screen.getByText(/not in the trusted registry for this network/)).toBeInTheDocument();
     });
 
     it("hides normal payment viewer when asset is unknown", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
@@ -102,7 +100,7 @@ describe("PaymentRequirementViewer", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
@@ -117,7 +115,7 @@ describe("PaymentRequirementViewer", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
@@ -131,7 +129,7 @@ describe("PaymentRequirementViewer", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
@@ -151,7 +149,7 @@ describe("PaymentRequirementViewer", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
@@ -168,7 +166,7 @@ describe("PaymentRequirementViewer", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
@@ -189,15 +187,12 @@ describe("PaymentRequirementViewer", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
       render(
-        <PaymentRequirementViewer
-          requirement={requirement}
-          onConfirmUnknownAsset={onConfirm}
-        />
+        <PaymentRequirementViewer requirement={requirement} onConfirmUnknownAsset={onConfirm} />
       );
 
       const checkbox = screen.getByRole("checkbox");
@@ -224,9 +219,7 @@ describe("PaymentRequirementViewer", () => {
       render(<PaymentRequirementViewer requirement={requirement} />);
 
       expect(screen.getByText("Invalid Asset Contract")).toBeInTheDocument();
-      expect(
-        screen.getByText(/invalid contract ID and cannot be processed/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/invalid contract ID and cannot be processed/)).toBeInTheDocument();
     });
 
     it("does not show confirmation checkbox for malformed asset", () => {
@@ -239,9 +232,7 @@ describe("PaymentRequirementViewer", () => {
 
       render(<PaymentRequirementViewer requirement={requirement} />);
 
-      expect(
-        screen.queryByRole("checkbox")
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     });
 
     it("shows correction message for malformed asset", () => {
@@ -254,9 +245,7 @@ describe("PaymentRequirementViewer", () => {
 
       render(<PaymentRequirementViewer requirement={requirement} />);
 
-      expect(
-        screen.getByText(/Please correct the contract ID and try again/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Please correct the contract ID and try again/)).toBeInTheDocument();
     });
   });
 
@@ -266,7 +255,7 @@ describe("PaymentRequirementViewer", () => {
         ...baseRequirement,
         extensions: {
           // Valid contract format, but not in registry (lookalike USDC)
-          assetContractId: "CBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQ1"
+          assetContractId: "CBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQ2"
         }
       };
 
@@ -296,7 +285,7 @@ describe("PaymentRequirementViewer", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
@@ -312,7 +301,7 @@ describe("PaymentRequirementViewer", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
@@ -327,13 +316,11 @@ describe("PaymentRequirementViewer", () => {
       const requirement: ResourcePaymentSummary = {
         ...baseRequirement,
         extensions: {
-          assetContractId: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+          assetContractId: unknownContractId
         }
       };
 
-      const { container } = render(
-        <PaymentRequirementViewer requirement={requirement} />
-      );
+      const { container } = render(<PaymentRequirementViewer requirement={requirement} />);
 
       const h3 = container.querySelector("h3");
       expect(h3).toBeInTheDocument();

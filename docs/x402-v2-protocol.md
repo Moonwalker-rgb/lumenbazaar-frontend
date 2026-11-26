@@ -59,11 +59,17 @@ All required fields must be present and valid. Validation fails closed on missin
 
 ```typescript
 // ✓ Valid
-{ x402Version: 2 }
+{
+  x402Version: 2;
+}
 
 // ✗ Invalid
-{ x402Version: 1 }        // Wrong version
-{ x402Version: "2" }      // Wrong type
+{
+  x402Version: 1;
+} // Wrong version
+{
+  x402Version: "2";
+} // Wrong type
 ```
 
 ### `accepts` (array of exact payment requirements)
@@ -236,7 +242,7 @@ The frontend selects the requirement matching the wallet's configured network. C
 - **Format**: Starts with `C` (Soroban contract), followed by 55 base32 characters
 - **Validation**: `isValidSorobanContractId()`
 - **Requirements**: Exact length, valid base32 alphabet (A-Z, 2-7 only; no 0, 1, 8, 9)
-- **Invalid examples**: account addresses (G*), malformed, wrong length
+- **Invalid examples**: account addresses (G\*), malformed, wrong length
 
 The asset field identifies the Soroban token contract being charged. Must be deployed on the specified network.
 
@@ -294,7 +300,7 @@ Amounts represent the smallest divisible unit of the asset (atomic units). The b
 - **Validation**: `isValidStellarAccountAddress()`
 - **Requirements**: Exact length, valid base32 alphabet (A-Z, 2-7 only; no 0, 1, 8, 9)
 - **Recipient type**: Must be an account address (not a contract)
-- **Invalid examples**: contract addresses (C*), malformed, wrong length
+- **Invalid examples**: contract addresses (C\*), malformed, wrong length
 
 The payTo field identifies where the payment should be sent. Must be a valid Stellar account that can receive payments.
 
@@ -425,6 +431,7 @@ expiresAt = receivedAt + (maxTimeoutSeconds * 1000)
 ```
 
 The client verifies challenge freshness at:
+
 1. Challenge request (immediately after receipt)
 2. Authorization (before wallet prompt)
 3. Settlement (before sending to backend)
@@ -437,8 +444,8 @@ All URLs are canonicalized to absolute form using `new URL().toString()`:
 
 ```typescript
 // Both canonicalize to the same value
-"https://api.example.com/resource"
-"https://api.example.com:443/resource"  // Explicit HTTPS port
+"https://api.example.com/resource";
+"https://api.example.com:443/resource"; // Explicit HTTPS port
 
 // The resourceUrl must match the challenge response resource.url
 if (canonicalUrl(challenge.resource.url) !== canonicalUrl(expected.resourceUrl)) {
@@ -515,6 +522,6 @@ x402 v2 exact scheme validation is strict and fail-closed:
 ✓ **Network IDs** support only Stellar testnet and pubnet  
 ✓ **Amounts** are atomic units only (no decimals)  
 ✓ **Assets** must be Soroban contracts (C*)  
-✓ **Recipients** must be account addresses (G* or M*)  
+✓ **Recipients** must be account addresses (G* or M\*)
 
 All test fixtures are available in `src/services/x402/x402-v2-fixtures.ts` and demonstrate the validation boundaries.

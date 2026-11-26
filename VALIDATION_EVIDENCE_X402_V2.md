@@ -60,13 +60,15 @@ This document provides validation evidence for the strict x402 v2 payment challe
 ### ✓ Valid Challenges Parse Successfully
 
 **Valid Stellar Addresses (G* or M*)**
+
 ```typescript
 ✓ GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE  (classic)
 ✓ MBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE  (muxed)
 ✓ GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF  (test address)
 ```
 
-**Valid Soroban Contract IDs (C*)**
+**Valid Soroban Contract IDs (C\*)**
+
 ```typescript
 ✓ CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS
 ✓ CASSETDEMO0000000000000000000000000000000000000000000
@@ -74,6 +76,7 @@ This document provides validation evidence for the strict x402 v2 payment challe
 ```
 
 **Valid Amounts (atomic units)**
+
 ```typescript
 ✓ "1"           (minimum: 1 atomic unit)
 ✓ "500000"      (0.50 with 7 decimals)
@@ -81,12 +84,14 @@ This document provides validation evidence for the strict x402 v2 payment challe
 ```
 
 **Valid Networks**
+
 ```typescript
 ✓ "stellar:testnet"
 ✓ "stellar:pubnet"
 ```
 
 **Valid Timeouts (seconds)**
+
 ```typescript
 ✓ 1             (minimum: 1 second)
 ✓ 300           (typical: 5 minutes)
@@ -96,6 +101,7 @@ This document provides validation evidence for the strict x402 v2 payment challe
 ### ✗ Malformed Fields Fail Closed
 
 **Amount Validation Failures**
+
 ```typescript
 ✗ "0"           → "must be a positive integer"
 ✗ "0500000"     → "cannot have leading zeros"
@@ -105,6 +111,7 @@ This document provides validation evidence for the strict x402 v2 payment challe
 ```
 
 **Network Validation Failures**
+
 ```typescript
 ✗ "stellar:public"     → "unsupported network"
 ✗ "ethereum:mainnet"   → "wrong blockchain"
@@ -113,6 +120,7 @@ This document provides validation evidence for the strict x402 v2 payment challe
 ```
 
 **Asset (Contract ID) Validation Failures**
+
 ```typescript
 ✗ ""            → "cannot be empty"
 ✗ "not-a-contract"   → "invalid format"
@@ -122,6 +130,7 @@ This document provides validation evidence for the strict x402 v2 payment challe
 ```
 
 **Recipient Validation Failures**
+
 ```typescript
 ✗ ""            → "cannot be empty"
 ✗ "not-an-address"   → "invalid format"
@@ -130,6 +139,7 @@ This document provides validation evidence for the strict x402 v2 payment challe
 ```
 
 **Timeout Validation Failures**
+
 ```typescript
 ✗ 0             → "must be positive"
 ✗ -300          → "must be positive"
@@ -144,6 +154,7 @@ This document provides validation evidence for the strict x402 v2 payment challe
 ### Unit Tests (130+ tests)
 
 **Validation Utilities** (`validation.test.ts`)
+
 - `isValidStellarAccountAddress()`: 15 tests
 - `isValidSorobanContractId()`: 14 tests
 - `isValidAtomicAmount()`: 20 tests
@@ -153,6 +164,7 @@ This document provides validation evidence for the strict x402 v2 payment challe
 - `isValidAbsoluteUrl()`: 20 tests
 
 **Schema Validation** (`x402-v2-schema.test.ts`)
+
 - Valid requirements parsing: 8 tests
 - Invalid amount field: 5 tests
 - Invalid network field: 2 tests
@@ -167,6 +179,7 @@ This document provides validation evidence for the strict x402 v2 payment challe
 ### E2E Tests (30+ tests)
 
 **Challenge Display and Validation**
+
 - Valid challenge display
 - Invalid amount format rejection
 - Network ID validation
@@ -179,18 +192,21 @@ This document provides validation evidence for the strict x402 v2 payment challe
 - Multiple network handling
 
 **State Transitions**
+
 - Challenge freshness checking
 - Timeout countdown display
 - Expired challenge rejection
 - Challenge mutation detection
 
 **Error Handling**
+
 - Missing PAYMENT-REQUIRED header
 - Missing required fields
 - Network timeout handling
 - Validation error messages
 
 **Responsive Design**
+
 - Desktop viewport (1280x720)
 - Mobile viewport (375x667)
 - Touch target sizes
@@ -201,6 +217,7 @@ This document provides validation evidence for the strict x402 v2 payment challe
 ## Fixture Coverage
 
 ### Valid Fixtures (11)
+
 1. Standard exact requirement (testnet)
 2. Pubnet variant
 3. Full challenge with metadata
@@ -216,6 +233,7 @@ This document provides validation evidence for the strict x402 v2 payment challe
 13. Large amount (1 trillion units)
 
 ### Invalid Fixtures (22)
+
 - Amount: 6 tests (decimal, zero, leading zeros, negative, non-numeric)
 - Network: 2 tests (unsupported, malformed)
 - Asset: 3 tests (empty, wrong format, classic address)
@@ -232,20 +250,21 @@ This document provides validation evidence for the strict x402 v2 payment challe
 
 ### Critical Fields Validated
 
-| Field | Constraint | Test | Result |
-|-------|-----------|------|--------|
-| `amount` | Positive integer, no decimals | 6 invalid fixtures | ✓ All rejected |
-| `network` | `stellar:testnet` or `stellar:pubnet` | 2 invalid fixtures | ✓ All rejected |
-| `asset` | Soroban contract (C*) | 3 invalid fixtures | ✓ All rejected |
-| `payTo` | Account address (G* or M*) | 3 invalid fixtures | ✓ All rejected |
-| `maxTimeoutSeconds` | Positive integer ≤ 604,800 | 3 invalid fixtures | ✓ All rejected |
-| `scheme` | Literal "exact" only | 1 invalid fixture | ✓ Rejected |
-| `x402Version` | Literal 2 only | 1 invalid fixture | ✓ Rejected |
-| `accepts` | Min 1 item, at least 1 "exact" | 2 invalid fixtures | ✓ All rejected |
+| Field               | Constraint                            | Test               | Result         |
+| ------------------- | ------------------------------------- | ------------------ | -------------- |
+| `amount`            | Positive integer, no decimals         | 6 invalid fixtures | ✓ All rejected |
+| `network`           | `stellar:testnet` or `stellar:pubnet` | 2 invalid fixtures | ✓ All rejected |
+| `asset`             | Soroban contract (C\*)                | 3 invalid fixtures | ✓ All rejected |
+| `payTo`             | Account address (G* or M*)            | 3 invalid fixtures | ✓ All rejected |
+| `maxTimeoutSeconds` | Positive integer ≤ 604,800            | 3 invalid fixtures | ✓ All rejected |
+| `scheme`            | Literal "exact" only                  | 1 invalid fixture  | ✓ Rejected     |
+| `x402Version`       | Literal 2 only                        | 1 invalid fixture  | ✓ Rejected     |
+| `accepts`           | Min 1 item, at least 1 "exact"        | 2 invalid fixtures | ✓ All rejected |
 
 ### Extension Preservation
 
 **Test**: Extensions are preserved without validation
+
 ```typescript
 ✓ Unknown extensions passed through (x-rate-limit-after-payment, x-subscription-tiers)
 ✓ Nested objects in extensions preserved
@@ -295,7 +314,7 @@ All validation failures include specific, actionable error messages:
 ✓ Challenge freshness checked at request time
 ✓ Challenge freshness checked at authorization time
 ✓ Challenge freshness checked before settlement
-✓ Expiry calculated as: receivedAt + (maxTimeoutSeconds * 1000)
+✓ Expiry calculated as: receivedAt + (maxTimeoutSeconds \* 1000)
 
 ---
 
@@ -326,6 +345,7 @@ All schema enhancements are **backward-compatible**:
 ### Complete Protocol Reference
 
 **docs/x402-v2-protocol.md** includes:
+
 - Challenge structure with examples
 - All required and optional fields documented
 - Field constraints and invalid examples
@@ -336,6 +356,7 @@ All schema enhancements are **backward-compatible**:
 ### Developer Quick Reference
 
 **docs/x402-v2-validation-guide.md** includes:
+
 - Format quick reference tables
 - Validation checklist
 - Testing checklist

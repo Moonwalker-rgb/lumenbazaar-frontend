@@ -19,6 +19,7 @@ When you open the playground, you'll see a **Data Mode** section at the top with
 ### Switching Modes
 
 Click either button to switch modes. When you switch:
+
 1. Verification/settlement results are cleared
 2. Resources are re-loaded for the new mode
 3. Resource selection resets to the first available resource
@@ -26,12 +27,14 @@ Click either button to switch modes. When you switch:
 ### Live Mode
 
 **When API is available:**
+
 - Resources are loaded from the live API
 - Data source badge shows: **Live API** (green)
 - Verification/settlement results can be viewed in the Stellar block explorer
 - Explorer links are enabled and safe to click
 
 **When API is unavailable:**
+
 - An error message is shown: "Live resources unavailable"
 - Live button is disabled
 - A "Switch to Simulation" button is offered
@@ -42,6 +45,7 @@ _Important:_ The playground **does not auto-fallback** to simulation if the API 
 ### Simulation Mode
 
 **Always available for testing:**
+
 - Resources are loaded from fixture data (no API call)
 - Data source badge shows: **Simulated (fixtures)** (amber)
 - All verification/settlement results are synthetic
@@ -54,6 +58,7 @@ _Important:_ The playground **does not auto-fallback** to simulation if the API 
 Each verification and settlement result includes a badge indicating its data source:
 
 ### Live Results
+
 ```
 ✓ Verification  [complete] [Live]
 Status: verified
@@ -65,6 +70,7 @@ Adapter: @x402/stellar
 ```
 
 ### Simulated Results
+
 ```
 ✓ Verification  [complete] [Simulated]
 Status: verified
@@ -108,12 +114,14 @@ This hash is recognizable as synthetic (not a real Stellar transaction hash) and
 The playground has two separate mode concepts:
 
 ### Data Mode (What we just covered)
+
 - Controls whether resources come from **live API** or **fixture data**
 - Buttons: Live / Simulation
 - Badge shows: "Live API" or "Simulated (fixtures)"
 - Affects: Resource loading, settlement explorer links, data source
 
 ### Authorization Mode (Payment signature type)
+
 - Controls the **transaction type** in the payment payload
 - Buttons: Simulation / Wallet draft / 402
 - Affects: Only the `transaction` field in the payment request
@@ -134,6 +142,7 @@ amount and fee can both be computed from validated values.
 ## Typical Workflows
 
 ### Testing Without API (Fixture-Based)
+
 1. Select **Simulation** mode (or verify it's selected)
 2. Choose a resource from the dropdown
 3. Click "Simulate verify" to test verification logic
@@ -141,6 +150,7 @@ amount and fee can both be computed from validated values.
 5. Synthetic data is clearly labeled as "Simulated"
 
 ### Testing Against Live API (When Available)
+
 1. Select **Live** mode
 2. If API is available, live resources load automatically
 3. Verify results show "Live API" badge
@@ -148,6 +158,7 @@ amount and fee can both be computed from validated values.
 5. Verification/settlement are real and on-chain
 
 ### Mixed Testing
+
 1. Load a live resource with **Live** mode
 2. Use **Simulation** for authorization (wallet draft → simulated)
 3. Verify result shows "Live" (resource source) while payload uses simulated tx
@@ -168,12 +179,15 @@ This error message is **always shown** if the API fails. You must explicitly cli
 ## Error Handling
 
 ### Type Safety
+
 The TypeScript type system ensures:
+
 - Live and simulated records are not accidentally mixed
 - Explorer links only render for `dataMode: "live"`
 - Result panels must acknowledge the data mode
 
 ### Runtime Safety
+
 - Resource lists are separate per mode
 - Switching modes clears all transient state (verification, settlement)
 - Mode badges are always visible on results

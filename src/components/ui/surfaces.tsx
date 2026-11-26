@@ -1,6 +1,6 @@
 import { AlertCircle, Inbox, LoaderCircle } from "lucide-react";
 
-import { useMotion } from "@/hooks/motion-context";
+import { DEFAULT_MOTION_CONTEXT, useOptionalMotion } from "@/hooks/motion-context";
 import { Button } from "./button";
 import { Card, CardBody } from "./card";
 
@@ -10,7 +10,7 @@ import { Card, CardBody } from "./card";
  * The visual intent (indicating loading) is preserved either way.
  */
 export function LoadingState({ label = "Loading" }: { label?: string }) {
-  const { enableMotion } = useMotion();
+  const { enableMotion } = useOptionalMotion() ?? DEFAULT_MOTION_CONTEXT;
 
   return (
     <Card>

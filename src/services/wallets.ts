@@ -20,9 +20,7 @@ export type WalletProvider = {
  * provider identifier; no account address, authorization, or signature is
  * persisted with it.
  */
-export const walletProviders: readonly WalletProvider[] = [
-  { id: "freighter", label: "Freighter" }
-];
+export const walletProviders: readonly WalletProvider[] = [{ id: "freighter", label: "Freighter" }];
 
 export type WalletProviderSelection = {
   message: string;
@@ -171,10 +169,7 @@ export function saveWalletProviderPreference(
   providerId: WalletProviderId,
   storage: WalletProviderStorage | undefined = browserWalletStorage()
 ) {
-  storage?.setItem(
-    walletProviderPreferenceStorageKey,
-    JSON.stringify({ providerId, version: 1 })
-  );
+  storage?.setItem(walletProviderPreferenceStorageKey, JSON.stringify({ providerId, version: 1 }));
   notifyWalletProviderChange();
 }
 

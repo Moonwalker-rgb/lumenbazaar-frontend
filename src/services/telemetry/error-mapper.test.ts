@@ -6,31 +6,61 @@ import { ApiClientError } from "@/services/api/client";
 describe("Error Mapper", () => {
   describe("mapErrorCategory", () => {
     it("should map ApiClientError with 400 status to VERIFICATION_FAILED", () => {
-      const error = new ApiClientError(400, "BAD_REQUEST", {}, "req-123");
+      const error = new ApiClientError({
+        code: "BAD_REQUEST",
+        details: {},
+        message: "Bad request",
+        requestId: "req-123",
+        status: 400
+      });
       const category = mapErrorCategory(error);
       expect(category).toBe("VERIFICATION_FAILED");
     });
 
     it("should map ApiClientError with 408 status to VERIFICATION_TIMEOUT", () => {
-      const error = new ApiClientError(408, "REQUEST_TIMEOUT", {}, "req-123");
+      const error = new ApiClientError({
+        code: "REQUEST_TIMEOUT",
+        details: {},
+        message: "Request timeout",
+        requestId: "req-123",
+        status: 408
+      });
       const category = mapErrorCategory(error);
       expect(category).toBe("VERIFICATION_TIMEOUT");
     });
 
     it("should map ApiClientError with 500 status to VERIFICATION_FAILED", () => {
-      const error = new ApiClientError(500, "INTERNAL_ERROR", {}, "req-123");
+      const error = new ApiClientError({
+        code: "INTERNAL_ERROR",
+        details: {},
+        message: "Internal error",
+        requestId: "req-123",
+        status: 500
+      });
       const category = mapErrorCategory(error);
       expect(category).toBe("VERIFICATION_FAILED");
     });
 
     it("should map ApiClientError with 0 status (network error) to NETWORK_ERROR", () => {
-      const error = new ApiClientError(0, "NETWORK_ERROR", {}, "req-123");
+      const error = new ApiClientError({
+        code: "NETWORK_ERROR",
+        details: {},
+        message: "Network error",
+        requestId: "req-123",
+        status: 0
+      });
       const category = mapErrorCategory(error);
       expect(category).toBe("NETWORK_ERROR");
     });
 
     it("should map ApiClientError with SIGNATURE code to INVALID_SIGNATURE", () => {
-      const error = new ApiClientError(400, "INVALID_SIGNATURE", {}, "req-123");
+      const error = new ApiClientError({
+        code: "INVALID_SIGNATURE",
+        details: {},
+        message: "Invalid signature",
+        requestId: "req-123",
+        status: 400
+      });
       const category = mapErrorCategory(error);
       expect(category).toBe("INVALID_SIGNATURE");
     });

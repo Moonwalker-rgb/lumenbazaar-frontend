@@ -33,13 +33,15 @@ export async function runSharedAssertions(page: Page, options?: SharedAssertionO
   const footers = await page.locator("footer, [role='contentinfo']").all();
 
   if (verbose) {
-    console.log(`Banner landmarks: ${banners.length}, Nav: ${navs.length}, Footer: ${footers.length}`);
+    console.log(
+      `Banner landmarks: ${banners.length}, Nav: ${navs.length}, Footer: ${footers.length}`
+    );
   }
 
   // If there are multiple navs, each should have an aria-label
   if (navs.length > 1) {
     for (let i = 0; i < navs.length; i++) {
-      const ariaLabel = await navs[i].getAttribute("aria-label");
+      const ariaLabel = await navs[i]!.getAttribute("aria-label");
       expect(ariaLabel).not.toBeNull();
     }
   }
@@ -68,7 +70,7 @@ export async function runSharedAssertions(page: Page, options?: SharedAssertionO
   const h1s = await page.locator("h1").all();
   expect(h1s.length).toBe(1);
 
-  if (verbose) console.log(`H1 text: "${await h1s[0].textContent()}"`);
+  if (verbose) console.log(`H1 text: "${await h1s[0]!.textContent()}"`);
 
   // Check for skipped heading levels
   const headings = await page.locator("h1, h2, h3, h4, h5, h6").all();
@@ -76,19 +78,20 @@ export async function runSharedAssertions(page: Page, options?: SharedAssertionO
 
   for (const heading of headings) {
     const tagName = await heading.evaluate((el) => el.tagName);
-    const level = parseInt(tagName[1]);
+    const level = parseInt(tagName[1]!);
     headingLevels.push(level);
   }
 
   // Verify no skipped levels (except between distant levels like h2 to h4 is ok after h1 to h2 pattern)
   if (headingLevels.length > 1) {
     for (let i = 1; i < headingLevels.length; i++) {
-      const prevLevel = headingLevels[i - 1];
-      const currLevel = headingLevels[i];
+      const prevLevel = headingLevels[i - 1]!;
+      const currLevel = headingLevels[i]!;
       // Allow jump if going back up (e.g., h3 to h2), but not forward (h1 to h3)
-      if (currLevel > prevLevel + 1) {
-        expect(false).toBe(true, `Skipped heading level: h${prevLevel} → h${currLevel}`);
-      }
+      expect(
+        currLevel <= prevLevel + 1,
+        `Skipped heading level: h${prevLevel} → h${currLevel}`
+      ).toBe(true);
     }
   }
 

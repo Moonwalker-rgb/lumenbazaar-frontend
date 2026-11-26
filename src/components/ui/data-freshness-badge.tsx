@@ -34,9 +34,7 @@ export function DataFreshnessBadge({
 
   return (
     <div className="flex items-center gap-2">
-      <Badge tone={isStale ? "warning" : "neutral"}>
-        {freshnessLabel(state, observedAt)}
-      </Badge>
+      <Badge tone={isStale ? "warning" : "neutral"}>{freshnessLabel(state, observedAt)}</Badge>
       {isStale && onRefresh && (
         <Button
           onClick={onRefresh}
@@ -45,10 +43,7 @@ export function DataFreshnessBadge({
           type="button"
           aria-label="Refresh stale results"
           title="Refresh results to get fresh data"
-          className={cn(
-            "px-2 py-1 text-xs gap-1",
-            isRefreshing && "cursor-wait"
-          )}
+          className={cn("px-2 py-1 text-xs gap-1", isRefreshing && "cursor-wait")}
         >
           {isRefreshing ? (
             <>
@@ -87,7 +82,9 @@ export function getResultAge(observedAt: string, now = Date.now()): number {
 }
 
 export function isResultStale(observedAt: string, now = Date.now()): boolean {
-  return getResultAge(observedAt, now) > staleAfterMs;
+  const observed = Date.parse(observedAt);
+  if (!Number.isFinite(observed)) return true;
+  return now - observed > staleAfterMs;
 }
 
 function freshnessLabel(state: ReturnType<typeof dataFreshnessState>, observedAt: string) {

@@ -161,8 +161,8 @@ git commit --template=.gitmessage
 git push -u origin frontend/warn-when-payment-assets-are-outside-the-trusted-registry
 
 # Output should show:
-# Branch 'frontend/warn-when-payment-assets-are-outside-the-trusted-registry' 
-# set up to track remote branch 
+# Branch 'frontend/warn-when-payment-assets-are-outside-the-trusted-registry'
+# set up to track remote branch
 # 'frontend/warn-when-payment-assets-are-outside-the-trusted-registry' from 'origin'.
 ```
 
@@ -172,8 +172,8 @@ git push -u origin frontend/warn-when-payment-assets-are-outside-the-trusted-reg
 git branch -v
 
 # Should show:
-# * frontend/warn-when-payment-assets-are-outside-the-trusted-registry  
-#   1234567 [origin/frontend/warn-when-payment-assets-are-outside-the-trusted-registry] 
+# * frontend/warn-when-payment-assets-are-outside-the-trusted-registry
+#   1234567 [origin/frontend/warn-when-payment-assets-are-outside-the-trusted-registry]
 #   feat: Add asset trust verification...
 ```
 
@@ -231,9 +231,11 @@ Relates to #49 (Accessibility testing)"
 # Asset Trust Verification (Issue #34)
 
 ## Overview
+
 Implement asset trust verification to warn users when payment assets are outside the configured trusted registry.
 
 ## Changes
+
 - **Classification Logic** (`src/services/api/asset-trust.ts`)
   - Classify assets into 4 categories: trusted, unknown, malformed, network-mismatched
   - Support contract ID validation and registry lookup
@@ -255,6 +257,7 @@ Implement asset trust verification to warn users when payment assets are outside
   - Git workflow
 
 ## Key Features
+
 ✅ Contract ID is sole trust indicator
 ✅ Lookalike symbol detection (same symbol, different contract)
 ✅ Explicit checkbox confirmation (not pre-checked)
@@ -264,6 +267,7 @@ Implement asset trust verification to warn users when payment assets are outside
 ✅ Fail-closed design (unknown assets blocked)
 
 ## Testing Verification
+
 - [x] 61 unit/component/E2E tests passing
 - [x] TypeScript: 0 errors
 - [x] Linting: 0 errors
@@ -274,6 +278,7 @@ Implement asset trust verification to warn users when payment assets are outside
 - [x] WCAG AA accessibility: verified
 
 ## Constraints
+
 - [x] No secrets or sensitive data
 - [x] Fail-closed design
 - [x] Scoped to issue #34
@@ -282,16 +287,19 @@ Implement asset trust verification to warn users when payment assets are outside
 - [x] Backward compatible
 
 ## Files Changed
+
 - 7 new files (logic, components, tests, docs)
 - 1 updated file (viewer integration)
 - 0 breaking changes
 
 ## Related Issues
+
 - Closes #34
 - Related to #33 (SEP-41 metadata)
 - Related to #49 (Accessibility testing)
 
 ## Checklist
+
 - [x] All requirements implemented
 - [x] Acceptance criteria met
 - [x] Tests written and passing

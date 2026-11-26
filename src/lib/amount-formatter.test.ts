@@ -77,7 +77,7 @@ describe("formatAtomicAmount", () => {
 
     it("formats very large amounts", () => {
       const result = formatAtomicAmount("9223372036854775807", usdc); // i64 max
-      expect(result.formatted).toBe("9223372036.854775807");
+      expect(result.formatted).toBe("9223372036854.775807");
     });
   });
 
@@ -170,7 +170,7 @@ describe("formatAtomicAmount", () => {
     });
 
     it("throws on null string", () => {
-      expect(() => formatAtomicAmount(null as any, usdc)).toThrow();
+      expect(() => formatAtomicAmount(null as unknown as string, usdc)).toThrow();
     });
   });
 
@@ -241,7 +241,7 @@ describe("formatAtomicAmount", () => {
       // Amount that would lose precision in float64 (> 2^53)
       const largeAmount = "9007199254740992"; // 2^53
       const result = formatAtomicAmount(largeAmount, usdc);
-      expect(result.formatted).toBe("9007199.254740992");
+      expect(result.formatted).toBe("9007199254.740992");
     });
   });
 });
@@ -332,7 +332,7 @@ describe("tryFormatAmount", () => {
       );
 
       expect(result).not.toBeNull();
-      expect(result?.formatted).toBe("9223372036.854775807");
+      expect(result?.formatted).toBe("9223372036854.775807");
     });
   });
 

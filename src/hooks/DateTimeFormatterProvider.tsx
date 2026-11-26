@@ -32,7 +32,10 @@ export type DateTimeFormatterContextType = {
   /** Format only the time */
   formatTime: (timestamp: string, includeSeconds?: boolean) => string;
   /** Format with full details including timezone info */
-  formatTimestamp: (timestamp: string, options?: Partial<DateTimeFormatOptions>) => FormattedDateTime;
+  formatTimestamp: (
+    timestamp: string,
+    options?: Partial<DateTimeFormatOptions>
+  ) => FormattedDateTime;
 };
 
 /**
@@ -80,8 +83,6 @@ export function DateTimeFormatterProvider({ children }: { children: ReactNode })
   );
 
   return (
-    <DateTimeFormatterContext.Provider value={value}>
-      {children}
-    </DateTimeFormatterContext.Provider>
+    <DateTimeFormatterContext.Provider value={value}>{children}</DateTimeFormatterContext.Provider>
   );
 }

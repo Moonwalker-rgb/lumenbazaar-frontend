@@ -167,7 +167,7 @@ describe("datetime-formatter", () => {
 
     it("always preserves ISO 8601 value", () => {
       const result = formatTimestamp(testDate, {
-        timezone: "America/Tokyo",
+        timezone: "Asia/Tokyo",
         locale: "ja-JP"
       });
 
@@ -308,13 +308,7 @@ describe("datetime-formatter", () => {
     const testDate = "2024-11-19T14:30:45.123Z";
 
     it("returns formatted string with timezone", () => {
-      const result = formatDateTime(
-        testDate,
-        "America/New_York",
-        "en-US",
-        true,
-        true
-      );
+      const result = formatDateTime(testDate, "America/New_York", "en-US", true, true);
 
       expect(typeof result).toBe("string");
       expect(result).toContain("Nov");
@@ -330,21 +324,9 @@ describe("datetime-formatter", () => {
     });
 
     it("respects includeSeconds parameter", () => {
-      const withSeconds = formatDateTime(
-        testDate,
-        "UTC",
-        "en-US",
-        true,
-        true
-      );
+      const withSeconds = formatDateTime(testDate, "UTC", "en-US", true, true);
 
-      const withoutSeconds = formatDateTime(
-        testDate,
-        "UTC",
-        "en-US",
-        true,
-        false
-      );
+      const withoutSeconds = formatDateTime(testDate, "UTC", "en-US", true, false);
 
       expect(withSeconds).not.toBe(withoutSeconds);
     });
@@ -435,16 +417,15 @@ describe("datetime-formatter", () => {
       expect(result.iso).toBe(endOfDay);
     });
 
-    it("handles dates with leap seconds gracefully", () => {
-      const date = "2024-06-30T23:59:60Z";
-
-      // JavaScript Date handles leap seconds by rolling over
-      const result = formatTimestamp(date, {
-        timezone: "UTC",
-        locale: "en-US"
-      });
-
-      expect(result.formatted).toBeTruthy();
+    it("rejects timestamps with leap seconds", () => {
+      // JavaScript Date cannot represent leap seconds; reject instead of
+      // silently rolling them over into the next minute.
+      expect(() =>
+        formatTimestamp("2024-06-30T23:59:60Z", {
+          timezone: "UTC",
+          locale: "en-US"
+        })
+      ).toThrow("Invalid ISO 8601 timestamp");
     });
 
     it("preserves millisecond precision in ISO value", () => {

@@ -54,7 +54,7 @@ describe("ReceiptDetailSummary", () => {
     render(<ReceiptDetailSummary receipt={receipt} />);
 
     expect(screen.getByText("receipt_123")).toBeInTheDocument();
-    expect(screen.getByText("finalized")).toBeInTheDocument();
+    expect(screen.getAllByText("finalized")).toHaveLength(2);
     expect(screen.getByText("stellar:testnet")).toBeInTheDocument();
     expect(screen.getByText("100 USDC")).toBeInTheDocument();
   });
@@ -111,7 +111,7 @@ describe("ReceiptDetailSummary", () => {
 
     render(<ReceiptDetailSummary receipt={receipt} />);
 
-    expect(screen.getByText("failed")).toBeInTheDocument();
+    expect(screen.getAllByText("failed")).toHaveLength(2);
     expect(screen.getByText("Failure information")).toBeInTheDocument();
     expect(screen.getByText("AMOUNT_MISMATCH")).toBeInTheDocument();
     expect(screen.getByText("Payment amount did not match")).toBeInTheDocument();
@@ -141,11 +141,9 @@ describe("ReceiptDetailSummary", () => {
 
     render(<ReceiptDetailSummary receipt={receipt} />);
 
-    expect(screen.getByText("pending")).toBeInTheDocument();
+    expect(screen.getAllByText("pending")).toHaveLength(2);
     expect(screen.getByText("Pending settlement")).toBeInTheDocument();
-    expect(
-      screen.getByText(/awaiting finalization on the Stellar network/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/awaiting finalization on the Stellar network/)).toBeInTheDocument();
   });
 
   it("displays finality confirmation with transaction hash and ledger", () => {
@@ -166,14 +164,16 @@ describe("ReceiptDetailSummary", () => {
       sellerId: null,
       settledAt: "2026-10-15T10:05:00Z",
       status: "finalized",
-      transactionHash: "abc123def456",
+      transactionHash: "abc123def456abc123def456abc123def456abc123def456abc123def456abc1",
       updatedAt: "2026-10-15T10:05:00Z"
     };
 
     render(<ReceiptDetailSummary receipt={receipt} />);
 
     expect(screen.getByText("Finality confirmation")).toBeInTheDocument();
-    expect(screen.getByText("abc123def456")).toBeInTheDocument();
+    expect(
+      screen.getByText("abc123def456abc123def456abc123def456abc123def456abc123def456abc1")
+    ).toBeInTheDocument();
     expect(screen.getByText("54321")).toBeInTheDocument();
   });
 
@@ -195,7 +195,7 @@ describe("ReceiptDetailSummary", () => {
       sellerId: null,
       settledAt: "2026-10-15T10:05:00Z",
       status: "finalized",
-      transactionHash: "tx_hash_abc123",
+      transactionHash: "abc123def456abc123def456abc123def456abc123def456abc123def456abc1",
       updatedAt: "2026-10-15T10:05:00Z"
     };
 
@@ -429,15 +429,17 @@ describe("ReceiptDetailSummary", () => {
 
     render(<ReceiptDetailSummary receipt={receipt} />);
 
-    // Should still show finality confirmation section
-    expect(screen.getByText("Finality confirmation")).toBeInTheDocument();
-    
+    // Non-hex identifiers are treated as synthetic simulation data.
+    expect(screen.getByText("Simulation data")).toBeInTheDocument();
+
     // Should display the hash
     expect(screen.getByText("invalid_hash_format")).toBeInTheDocument();
 
     // Should show warning instead of link
-    expect(screen.getByText(/Transaction hash is invalid and cannot be verified/)).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /View on Stellar explorer/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/cannot be verified on the Stellar explorer/)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /View on Stellar explorer/ })
+    ).not.toBeInTheDocument();
   });
 
   it("does not display finality section for finalized receipt with no transaction hash", () => {
@@ -494,9 +496,7 @@ describe("ReceiptDetailSummary", () => {
 
     expect(screen.getByText("Finality confirmation")).toBeInTheDocument();
     expect(screen.getByText("789456")).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /View on Stellar explorer/ })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /View on Stellar explorer/ })).toBeInTheDocument();
   });
 
   it("handles transaction hash with null ledger gracefully", () => {
@@ -525,9 +525,7 @@ describe("ReceiptDetailSummary", () => {
 
     expect(screen.getByText("Finality confirmation")).toBeInTheDocument();
     expect(screen.getByText("Unknown")).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /View on Stellar explorer/ })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /View on Stellar explorer/ })).toBeInTheDocument();
   });
 
   it("handles transaction hash with null settlement time gracefully", () => {
@@ -556,8 +554,6 @@ describe("ReceiptDetailSummary", () => {
 
     expect(screen.getByText("Finality confirmation")).toBeInTheDocument();
     expect(screen.getByText("Pending")).toBeInTheDocument(); // Fallback text for missing settledAt
-    expect(
-      screen.getByRole("link", { name: /View on Stellar explorer/ })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /View on Stellar explorer/ })).toBeInTheDocument();
   });
 });

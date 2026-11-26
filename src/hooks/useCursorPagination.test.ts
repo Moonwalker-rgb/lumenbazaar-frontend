@@ -1,19 +1,26 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, vi, afterEach, type Mock } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useCursorPagination, type PaginatedResponse } from "./useCursorPagination";
+import {
+  useCursorPagination,
+  type PaginatedResponse,
+  type UseCursorPaginationOptions
+} from "./useCursorPagination";
 
 interface TestItem {
   id: string;
   name: string;
 }
 
+type QueryFn = UseCursorPaginationOptions<TestItem>["queryFn"];
+type UpdateUrlFn = NonNullable<UseCursorPaginationOptions<TestItem>["onUpdateUrl"]>;
+
 describe("useCursorPagination", () => {
-  let mockQueryFn: ReturnType<typeof vi.fn>;
+  let mockQueryFn: Mock<QueryFn>;
 
   beforeEach(() => {
     // Reset history and URL
     window.history.replaceState(null, "", "/");
-    mockQueryFn = vi.fn();
+    mockQueryFn = vi.fn<QueryFn>();
   });
 
   afterEach(() => {
@@ -52,7 +59,7 @@ describe("useCursorPagination", () => {
     it("shows loading state during initial fetch", async () => {
       mockQueryFn.mockImplementation(
         () =>
-          new Promise((resolve) =>
+          new Promise<PaginatedResponse<TestItem>>((resolve) =>
             setTimeout(
               () =>
                 resolve({
@@ -217,7 +224,8 @@ describe("useCursorPagination", () => {
       });
 
       await waitFor(() => {
-        // Should deduplicate item2, keeping only item1, item2, item3
+        // Navigating replaces the page; deduplicate within the new page while
+        // keeping backend order (item2 appears once).
         expect(result.current.rows.map((r) => r.id)).toEqual(["2", "3"]);
       });
     });
@@ -439,7 +447,7 @@ describe("useCursorPagination", () => {
           items: [{ id: "2", name: "Item 2" }]
         });
 
-      const updateUrlFn = vi.fn();
+      const updateUrlFn = vi.fn<UpdateUrlFn>();
 
       const { result } = renderHook(() =>
         useCursorPagination({
@@ -458,7 +466,7 @@ describe("useCursorPagination", () => {
       });
 
       expect(updateUrlFn).toHaveBeenCalled();
-      const params = updateUrlFn.mock.calls[0][0] as URLSearchParams;
+      const params = updateUrlFn.mock.calls[0]![0];
       expect(params.get("cursor")).toBe("next-cursor");
       expect(params.get("direction")).toBe("forward");
     });
@@ -468,7 +476,7 @@ describe("useCursorPagination", () => {
         items: [{ id: "1", name: "Item 1" }]
       });
 
-      const updateUrlFn = vi.fn();
+      const updateUrlFn = vi.fn<UpdateUrlFn>();
 
       const { result } = renderHook(() =>
         useCursorPagination({
@@ -487,7 +495,7 @@ describe("useCursorPagination", () => {
       });
 
       expect(updateUrlFn).toHaveBeenCalled();
-      const params = updateUrlFn.mock.calls[updateUrlFn.mock.calls.length - 1][0] as URLSearchParams;
+      const params = updateUrlFn.mock.calls.at(-1)![0];
       expect(params.get("cursor")).toBeNull();
       expect(params.get("direction")).toBeNull();
     });
@@ -533,15 +541,19 @@ describe("useCursorPagination", () => {
         second: 50 // Completes first
       };
 
-      mockQueryFn.mockImplementation((cursor) =>
-        new Promise((resolve) =>
-          setTimeout(() => {
-            resolve({
-              items: [{ id: cursor, name: `Item ${cursor}` }],
-              nextCursor: `next-${cursor}`
-            });
-          }, delays[cursor as string] || 100)
-        )
+      mockQueryFn.mockImplementation(
+        (cursor) =>
+          new Promise<PaginatedResponse<TestItem>>((resolve) =>
+            setTimeout(
+              () => {
+                resolve({
+                  items: [{ id: cursor as string, name: `Item ${cursor}` }],
+                  nextCursor: `next-${cursor}`
+                });
+              },
+              delays[cursor as string] || 100
+            )
+          )
       );
 
       mockQueryFn

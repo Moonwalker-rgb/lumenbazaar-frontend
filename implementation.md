@@ -546,7 +546,6 @@ Completion check:
 
 - The frontend can evolve without drifting from backend, docs, and contract behavior.
 
-
 ## Phase 39: Receipt Evidence Verification (Completed)
 
 ### Overview
@@ -564,15 +563,15 @@ Receipt evidence verification ensures that a settlement receipt presented to the
 
 The system persists all seven critical payment terms in the recovery record:
 
-| Term | Stored In | Compared At | Purpose |
-|------|-----------|------------|---------|
-| **Network** | `recovery.network` | Receipt validation | Ensures payment on correct blockchain |
-| **Asset Code** | `recovery.assetCode` | Receipt validation | Ensures correct token is paid |
-| **Asset Issuer** | `recovery.assetIssuer` | Receipt validation | Identifies token issuer address |
-| **Amount** | `recovery.amount` | Receipt validation | Confirms correct payment amount |
-| **Recipient** (payTo) | `recovery.payTo` | Recovery record | Ensures funds go to intended seller |
-| **Payment Attempt ID** | `recovery.paymentAttemptId` | Settlement & receipt validation | Tracks payment through backend |
-| **Correlation ID** | `recovery.correlationId` | Settlement & receipt validation | Correlates verify → settle → receipt flow |
+| Term                   | Stored In                   | Compared At                     | Purpose                                   |
+| ---------------------- | --------------------------- | ------------------------------- | ----------------------------------------- |
+| **Network**            | `recovery.network`          | Receipt validation              | Ensures payment on correct blockchain     |
+| **Asset Code**         | `recovery.assetCode`        | Receipt validation              | Ensures correct token is paid             |
+| **Asset Issuer**       | `recovery.assetIssuer`      | Receipt validation              | Identifies token issuer address           |
+| **Amount**             | `recovery.amount`           | Receipt validation              | Confirms correct payment amount           |
+| **Recipient** (payTo)  | `recovery.payTo`            | Recovery record                 | Ensures funds go to intended seller       |
+| **Payment Attempt ID** | `recovery.paymentAttemptId` | Settlement & receipt validation | Tracks payment through backend            |
+| **Correlation ID**     | `recovery.correlationId`    | Settlement & receipt validation | Correlates verify → settle → receipt flow |
 
 ### Implementation Details
 
@@ -580,22 +579,23 @@ The system persists all seven critical payment terms in the recovery record:
 
 ```typescript
 const recoverySchema = z.object({
-  amount: z.string().regex(/^[1-9]\d*$/),           // Atomic amount (stroops)
-  assetCode: z.string().min(1),                      // Asset code (e.g., "USDC")
-  assetIssuer: z.string().min(1),                    // Asset issuer address or contract ID
-  correlationId: z.string().min(1),                  // Verification → settlement correlation
-  network: z.literal("stellar:testnet"),             // Network identifier
-  paymentAttemptId: z.string().min(1),               // Unique payment identifier
-  payTo: z.string().min(1),                          // Intended recipient address
-  receiptId: z.string().min(1).optional(),           // Set after settlement submission
-  resourceId: z.string().min(1),                     // Resource being paid for
-  stage: z.enum(["verified", "submitted"]),         // Payment stage
-  transactionHash: z.string().min(1).optional(),     // Set after successful settlement
-  updatedAt: z.string().datetime()                   // Last update timestamp
+  amount: z.string().regex(/^[1-9]\d*$/), // Atomic amount (stroops)
+  assetCode: z.string().min(1), // Asset code (e.g., "USDC")
+  assetIssuer: z.string().min(1), // Asset issuer address or contract ID
+  correlationId: z.string().min(1), // Verification → settlement correlation
+  network: z.literal("stellar:testnet"), // Network identifier
+  paymentAttemptId: z.string().min(1), // Unique payment identifier
+  payTo: z.string().min(1), // Intended recipient address
+  receiptId: z.string().min(1).optional(), // Set after settlement submission
+  resourceId: z.string().min(1), // Resource being paid for
+  stage: z.enum(["verified", "submitted"]), // Payment stage
+  transactionHash: z.string().min(1).optional(), // Set after successful settlement
+  updatedAt: z.string().datetime() // Last update timestamp
 });
 ```
 
 Recovery records are stored in `sessionStorage` under keys like `lumenbazaar:payment-recovery:${resourceId}`. The storage is cleared:
+
 - After successful settlement confirmation
 - On explicit settlement failures
 - On browser close (session scope)
@@ -629,6 +629,7 @@ Transaction Lineage Validation:
 ```
 
 Each mismatch generates an explicit error message:
+
 - "Amount mismatch: expected 500000, got 600000"
 - "Asset code mismatch: expected USDC, got USDT"
 - "Network mismatch: expected stellar:testnet, got stellar:public"
@@ -653,19 +654,22 @@ When `outcomeFromReceipt()` is called:
 When `outcome.validationErrors` is present, an amber warning alert displays:
 
 ```tsx
-{hasValidationErrors && (
-  <div role="alert" className="bg-amber-50 border-amber-200">
-    <h3>Receipt evidence validation warnings</h3>
-    <ul>
-      {outcome.validationErrors.map(error => (
-        <li key={error}>{error}</li>
-      ))}
-    </ul>
-  </div>
-)}
+{
+  hasValidationErrors && (
+    <div role="alert" className="bg-amber-50 border-amber-200">
+      <h3>Receipt evidence validation warnings</h3>
+      <ul>
+        {outcome.validationErrors.map((error) => (
+          <li key={error}>{error}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 ```
 
 Enhanced receipt details display:
+
 - **Receipt ID**: Full ID with text wrapping
 - **Receipt Status**: pending | finalized | failed
 - **Ledger**: Ledger number or "Pending"
@@ -687,6 +691,7 @@ Comprehensive test suite in `paid-flow.test.ts` with 8 focused tests:
 8. ✅ Transaction hash mismatch → indeterminate
 
 Each test:
+
 - Mutates a single field independently
 - Verifies indeterminate state is returned
 - Confirms detailed error message is present
@@ -705,10 +710,12 @@ Each test:
 Error messages are specific but don't expose backend internals:
 
 ✅ **User-Facing**:
+
 - "Amount mismatch: expected 500000, got 600000"
 - "Network mismatch: expected stellar:testnet, got stellar:public"
 
 ❌ **Avoid Exposing**:
+
 - Full request/response bodies
 - API endpoint URLs
 - Backend version or service names
@@ -717,6 +724,7 @@ Error messages are specific but don't expose backend internals:
 ### Browser Compatibility
 
 Recovery records use `sessionStorage` (supported in all modern browsers):
+
 - Desktop: Chrome, Firefox, Safari, Edge
 - Mobile: Chrome, Safari (iOS 5+)
 - Falls back gracefully to `null` in SSR contexts
@@ -735,4 +743,3 @@ Recovery records use `sessionStorage` (supported in all modern browsers):
 3. **Signature Verification**: Include challenge fingerprint validation for replay detection
 4. **Audit Logging**: Store anonymized validation events for fraud detection
 5. **Batch Validation**: Handle multiple concurrent payment attempts
-

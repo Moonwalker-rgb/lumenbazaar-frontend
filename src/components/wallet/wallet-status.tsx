@@ -2,8 +2,6 @@
 
 import { LogOut, PlugZap, Wallet } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { useSyncExternalStore, useState } from "react";
-import { useEffect, useRef } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,12 +23,9 @@ import {
   reconnectWallet,
   resetWalletProviderPreference,
   resolveWalletProvider,
+  revalidateWalletSession,
   saveWalletProviderPreference,
   subscribeWalletProviderPreference,
-  switchWalletNetwork,
-  walletProviders,
-  revalidateWalletSession,
-  revalidateWalletSession,
   switchWalletNetwork,
   walletProviders,
   type WalletConnectionState,

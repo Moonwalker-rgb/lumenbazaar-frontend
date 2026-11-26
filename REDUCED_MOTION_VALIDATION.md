@@ -7,6 +7,7 @@ Successfully implemented reduced-motion interaction mode for LumenBazaar fronten
 ## Files Created/Modified
 
 ### Core Implementation
+
 1. **src/app/globals.css** - Motion tokens and prefers-reduced-motion support
    - Added CSS custom properties for motion durations and easing
    - Added `@media (prefers-reduced-motion: reduce)` that disables all animations
@@ -24,6 +25,7 @@ Successfully implemented reduced-motion interaction mode for LumenBazaar fronten
    - `MotionContextValue` interface defines context shape
 
 ### Component Updates
+
 4. **src/components/ui/button.tsx**
    - Added `transition-colors` with `duration-[var(--motion-duration-base)]`
    - Transitions respect prefers-reduced-motion via CSS override
@@ -45,6 +47,7 @@ Successfully implemented reduced-motion interaction mode for LumenBazaar fronten
    - Positioned inside `QueryClientProvider` for proper context hierarchy
 
 ### Tests
+
 9. **src/hooks/useMotionPreference.test.ts**
    - Tests hook initialization and hydration handling
    - Tests preference detection via matchMedia
@@ -69,24 +72,28 @@ Successfully implemented reduced-motion interaction mode for LumenBazaar fronten
 ## Acceptance Criteria ✓
 
 ### System preference is honored without hydration mismatch
+
 - ✓ `useMotionPreference` hook initializes with default value on server
 - ✓ Client-side `useEffect` updates state after hydration
 - ✓ Prevents server/client render mismatch
 - ✓ E2E tests verify no hydration warnings
 
 ### Loading and status meaning does not rely on motion
+
 - ✓ LoadingState component shows static icon in reduced-motion mode
 - ✓ Visual intent (loading state) preserved with or without animation
 - ✓ Text label "Loading" provides semantic meaning
 - ✓ Icon color (teal) provides visual status
 
 ### Tests cover both preference modes
+
 - ✓ Unit tests for hook with mockMedia matching both true/false
 - ✓ Unit tests for context with preference updates
 - ✓ E2E tests with `emulateMedia({ reducedMotion: 'reduce' })`
 - ✓ E2E tests with `emulateMedia({ reducedMotion: 'no-preference' })`
 
 ### CSS custom properties for motion tokens
+
 - ✓ `--motion-duration-fast: 150ms`
 - ✓ `--motion-duration-base: 300ms`
 - ✓ `--motion-duration-slow: 500ms`
@@ -98,6 +105,7 @@ Successfully implemented reduced-motion interaction mode for LumenBazaar fronten
 ### Validation requirements
 
 #### TypeScript/Code Quality
+
 - ✓ All files have valid TypeScript syntax
 - ✓ Proper type exports (MotionContextValue interface)
 - ✓ Correct React hooks usage (useState, useEffect, useContext)
@@ -105,6 +113,7 @@ Successfully implemented reduced-motion interaction mode for LumenBazaar fronten
 - ✓ No import errors or circular dependencies
 
 #### Component Coverage
+
 - ✓ Button component with motion tokens
 - ✓ Export menu with conditional animation
 - ✓ Loading state with conditional animation
@@ -112,6 +121,7 @@ Successfully implemented reduced-motion interaction mode for LumenBazaar fronten
 - ✓ All components render without errors
 
 #### Motion Implementation
+
 - ✓ CSS media query for prefers-reduced-motion
 - ✓ Motion preference context at app root
 - ✓ Conditional rendering based on enableMotion flag
@@ -119,6 +129,7 @@ Successfully implemented reduced-motion interaction mode for LumenBazaar fronten
 - ✓ Animations can be disabled globally via CSS
 
 #### Testing
+
 - ✓ Unit tests for useMotionPreference hook (initialization, hydration, events, edge cases)
 - ✓ Unit tests for MotionProvider context
 - ✓ E2E tests for reduced-motion behavior (desktop & mobile via Playwright projects)
@@ -140,12 +151,14 @@ Successfully implemented reduced-motion interaction mode for LumenBazaar fronten
 ### Component Motion Pattern
 
 **Conditional Animation via Hook:**
+
 ```tsx
 const { enableMotion } = useMotion();
-<IconComponent className={enableMotion ? "animate-spin" : ""} />
+<IconComponent className={enableMotion ? "animate-spin" : ""} />;
 ```
 
 **Motion Tokens via CSS:**
+
 ```css
 /* In globals.css */
 transition-colors duration-[var(--motion-duration-base)]
@@ -159,6 +172,7 @@ transition-colors duration-[var(--motion-duration-base)]
 ### Hydration Safety
 
 The implementation prevents hydration mismatches through:
+
 1. Initial state default: `prefersReducedMotion = false`
 2. Server renders with motion enabled (safe default)
 3. Client initially renders matching server (no mismatch)
@@ -183,24 +197,24 @@ The implementation prevents hydration mismatches through:
 
 ## Files Modified Summary
 
-| File | Changes |
-|------|---------|
-| src/app/globals.css | Added motion tokens and prefers-reduced-motion media query |
-| src/hooks/useMotionPreference.ts | NEW - Motion preference detection |
-| src/hooks/motion-context.tsx | NEW - Motion context provider |
-| src/components/ui/button.tsx | Added motion token duration |
-| src/components/ui/export-menu.tsx | Conditional animation via useMotion hook |
-| src/components/ui/surfaces.tsx | Conditional animate-spin via useMotion hook |
-| src/components/seller/resource-wizard-basic-info.tsx | Added motion token durations |
-| src/app/providers.tsx | Added MotionProvider wrapper |
+| File                                                 | Changes                                                    |
+| ---------------------------------------------------- | ---------------------------------------------------------- |
+| src/app/globals.css                                  | Added motion tokens and prefers-reduced-motion media query |
+| src/hooks/useMotionPreference.ts                     | NEW - Motion preference detection                          |
+| src/hooks/motion-context.tsx                         | NEW - Motion context provider                              |
+| src/components/ui/button.tsx                         | Added motion token duration                                |
+| src/components/ui/export-menu.tsx                    | Conditional animation via useMotion hook                   |
+| src/components/ui/surfaces.tsx                       | Conditional animate-spin via useMotion hook                |
+| src/components/seller/resource-wizard-basic-info.tsx | Added motion token durations                               |
+| src/app/providers.tsx                                | Added MotionProvider wrapper                               |
 
 ## Test Files Added
 
-| File | Purpose |
-|------|---------|
-| src/hooks/useMotionPreference.test.ts | Unit tests for motion hook |
-| src/hooks/motion-context.test.tsx | Unit tests for motion context |
-| tests/e2e/reduced-motion.spec.ts | E2E tests for motion behavior |
+| File                                  | Purpose                       |
+| ------------------------------------- | ----------------------------- |
+| src/hooks/useMotionPreference.test.ts | Unit tests for motion hook    |
+| src/hooks/motion-context.test.tsx     | Unit tests for motion context |
+| tests/e2e/reduced-motion.spec.ts      | E2E tests for motion behavior |
 
 ## Known Limitations
 

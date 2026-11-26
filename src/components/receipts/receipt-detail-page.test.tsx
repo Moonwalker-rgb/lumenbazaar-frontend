@@ -2,17 +2,24 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { apiClient } from "@/services/api/client";
 import { createQueryClient } from "@/services/api/query";
 import type { Receipt } from "@/services/api/schemas";
 
 import { ReceiptDetailPage } from "./receipt-detail-page";
 
+const getReceiptMock = vi.mocked(apiClient.getReceipt);
+
 // Mock the API client
-vi.mock("@/services/api", () => ({
-  apiClient: {
-    getReceipt: vi.fn()
-  }
-}));
+vi.mock("@/services/api/client", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/services/api/client")>();
+  return {
+    ...actual,
+    apiClient: {
+      getReceipt: vi.fn()
+    }
+  };
+});
 
 // Mock the payments service
 vi.mock("@/services/payments", () => ({
@@ -27,13 +34,18 @@ vi.mock("@/services/payments", () => ({
       return false;
     }
     return /^[a-f0-9]{64}$/i.test(hash);
+  }),
+  isSyntheticTransactionId: vi.fn((hash: string | null | undefined) => {
+    if (!hash || typeof hash !== "string") {
+      return false;
+    }
+    return hash.startsWith("upto-") || hash.startsWith("exact-") || hash.startsWith("playground_");
   })
 }));
 
 describe("ReceiptDetailPage", () => {
   it("renders a loading state while fetching the receipt", () => {
-    const { apiClient } = require("@/services/api");
-    apiClient.getReceipt.mockImplementation(() => new Promise(() => {})); // Never resolves
+    getReceiptMock.mockImplementation(() => new Promise(() => {})); // Never resolves
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -45,7 +57,6 @@ describe("ReceiptDetailPage", () => {
   });
 
   it("renders receipt details when successfully loaded", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "100",
       assetCode: "USDC",
@@ -66,7 +77,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: "tx_hash_abc123",
       updatedAt: "2026-10-15T10:05:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -79,13 +90,12 @@ describe("ReceiptDetailPage", () => {
     });
 
     expect(screen.getByText("receipt_123")).toBeInTheDocument();
-    expect(screen.getByText("finalized")).toBeInTheDocument();
+    expect(screen.getAllByText("finalized").length).toBeGreaterThan(0);
     expect(screen.getByText("stellar:testnet")).toBeInTheDocument();
     expect(screen.getByText("100 USDC")).toBeInTheDocument();
   });
 
   it("renders finality confirmation section for finalized receipts", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "50",
       assetCode: "USDC",
@@ -103,10 +113,10 @@ describe("ReceiptDetailPage", () => {
       sellerId: null,
       settledAt: "2026-10-15T10:05:00Z",
       status: "finalized",
-      transactionHash: "tx_def456",
+      transactionHash: "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
       updatedAt: "2026-10-15T10:05:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -118,13 +128,14 @@ describe("ReceiptDetailPage", () => {
       expect(screen.getByText("Finality confirmation")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("tx_def456")).toBeInTheDocument();
+    expect(
+      screen.getByText("abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789")
+    ).toBeInTheDocument();
     expect(screen.getByText("54321")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /View on Stellar explorer/ })).toBeInTheDocument();
   });
 
   it("renders failure information for failed receipts", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "25",
       assetCode: "USDC",
@@ -145,7 +156,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: null,
       updatedAt: "2026-10-15T10:01:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -158,11 +169,12 @@ describe("ReceiptDetailPage", () => {
     });
 
     expect(screen.getByText("AMOUNT_MISMATCH")).toBeInTheDocument();
-    expect(screen.getByText("Payment amount did not match resource requirement")).toBeInTheDocument();
+    expect(
+      screen.getByText("Payment amount did not match resource requirement")
+    ).toBeInTheDocument();
   });
 
   it("renders pending state message for pending receipts", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "75",
       assetCode: "USDC",
@@ -183,7 +195,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: null,
       updatedAt: "2026-10-15T10:00:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -195,15 +207,12 @@ describe("ReceiptDetailPage", () => {
       expect(screen.getByText("Pending settlement")).toBeInTheDocument();
     });
 
-    expect(
-      screen.getByText(/awaiting finalization on the Stellar network/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/awaiting finalization on the Stellar network/)).toBeInTheDocument();
   });
 
   it("renders an error state when the receipt cannot be retrieved", async () => {
-    const { apiClient } = require("@/services/api");
     const error = new Error("Not found");
-    apiClient.getReceipt.mockRejectedValue(error);
+    getReceiptMock.mockRejectedValue(error);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -211,20 +220,18 @@ describe("ReceiptDetailPage", () => {
       </QueryClientProvider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText("Receipt unavailable")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText("Receipt unavailable")).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
-    expect(
-      screen.getByText(
-        "The receipt could not be retrieved from the backend. Please verify the receipt ID and try again."
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText("Not found")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
   });
 
   it("includes associated resource information when present", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "100",
       assetCode: "USDC",
@@ -245,7 +252,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: "tx_hash_abc123",
       updatedAt: "2026-10-15T10:05:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -261,7 +268,6 @@ describe("ReceiptDetailPage", () => {
   });
 
   it("includes seller information when present", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "100",
       assetCode: "USDC",
@@ -282,7 +288,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: "tx_hash_abc123",
       updatedAt: "2026-10-15T10:05:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -298,7 +304,6 @@ describe("ReceiptDetailPage", () => {
   });
 
   it("calls the API client with the correct receipt ID", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "100",
       assetCode: "USDC",
@@ -319,7 +324,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: "tx_hash_abc123",
       updatedAt: "2026-10-15T10:05:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -333,7 +338,6 @@ describe("ReceiptDetailPage", () => {
   });
 
   it("displays finalized receipt with valid transaction hash on testnet", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "50.5",
       assetCode: "USDC",
@@ -354,7 +358,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: "abc123def456abc123def456abc123def456abc123def456abc123def456abc1",
       updatedAt: "2026-10-15T10:05:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -369,7 +373,9 @@ describe("ReceiptDetailPage", () => {
     // Verify testnet-specific content
     expect(screen.getByText(/Testnet/)).toBeInTheDocument();
     expect(screen.getByText("99999")).toBeInTheDocument();
-    expect(screen.getByText(/abc123def456abc123def456abc123def456abc123def456abc123def456abc1/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/abc123def456abc123def456abc123def456abc123def456abc123def456abc1/)
+    ).toBeInTheDocument();
 
     // Verify explorer link
     const explorerLink = screen.getByRole("link", { name: /View on Stellar explorer/ });
@@ -377,7 +383,6 @@ describe("ReceiptDetailPage", () => {
   });
 
   it("displays finalized receipt with malformed transaction hash", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "25",
       assetCode: "USDC",
@@ -398,7 +403,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: "not_a_valid_hash", // Malformed hash
       updatedAt: "2026-10-15T10:05:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -414,12 +419,15 @@ describe("ReceiptDetailPage", () => {
     expect(screen.getByText("not_a_valid_hash")).toBeInTheDocument();
 
     // Should show warning instead of explorer link
-    expect(screen.getByText(/Transaction hash is invalid and cannot be verified/)).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /View on Stellar explorer/ })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Transaction hash is invalid and cannot be verified/)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /View on Stellar explorer/ })
+    ).not.toBeInTheDocument();
   });
 
   it("displays pending receipt without transaction details", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "100",
       assetCode: "USDC",
@@ -440,7 +448,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: null,
       updatedAt: "2026-10-15T10:00:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -453,7 +461,7 @@ describe("ReceiptDetailPage", () => {
     });
 
     // Should display warning badge
-    expect(screen.getByText("pending")).toBeInTheDocument();
+    expect(screen.getAllByText("pending").length).toBeGreaterThan(0);
 
     // Should show mainnet badge
     expect(screen.getByText(/Mainnet/)).toBeInTheDocument();
@@ -464,7 +472,6 @@ describe("ReceiptDetailPage", () => {
   });
 
   it("displays failed receipt with all failure details", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "100",
       assetCode: "USDC",
@@ -473,7 +480,8 @@ describe("ReceiptDetailPage", () => {
       createdAt: "2026-10-15T09:00:00Z",
       evidenceHash: "hash_failed",
       failureCode: "INSUFFICIENT_BALANCE",
-      failureReason: "The seller account does not have sufficient balance to complete this payment.",
+      failureReason:
+        "The seller account does not have sufficient balance to complete this payment.",
       id: "receipt_failed_comprehensive",
       ledger: null,
       network: "stellar:testnet",
@@ -485,7 +493,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: null,
       updatedAt: "2026-10-15T09:01:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -498,7 +506,7 @@ describe("ReceiptDetailPage", () => {
     });
 
     // Should display danger badge
-    expect(screen.getByText("failed")).toBeInTheDocument();
+    expect(screen.getAllByText("failed").length).toBeGreaterThan(0);
 
     // Should display failure details
     expect(screen.getByText("INSUFFICIENT_BALANCE")).toBeInTheDocument();
@@ -515,7 +523,6 @@ describe("ReceiptDetailPage", () => {
   });
 
   it("displays different badges for different networks", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "100",
       assetCode: "USDC",
@@ -536,7 +543,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: "def789abc456def789abc456def789abc456def789abc456def789abc456def7",
       updatedAt: "2026-10-15T10:05:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -558,7 +565,6 @@ describe("ReceiptDetailPage", () => {
   });
 
   it("handles receipt with all optional fields populated", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "123.45",
       assetCode: "USDC",
@@ -579,7 +585,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
       updatedAt: "2026-10-15T09:30:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -606,7 +612,6 @@ describe("ReceiptDetailPage", () => {
   });
 
   it("handles receipt with minimal fields (no optional fields)", async () => {
-    const { apiClient } = require("@/services/api");
     const mockReceipt: Receipt = {
       amount: "10",
       assetCode: "USDC",
@@ -627,7 +632,7 @@ describe("ReceiptDetailPage", () => {
       transactionHash: null,
       updatedAt: "2026-10-15T10:00:00Z"
     };
-    apiClient.getReceipt.mockResolvedValue(mockReceipt);
+    getReceiptMock.mockResolvedValue(mockReceipt);
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -650,4 +655,3 @@ describe("ReceiptDetailPage", () => {
     expect(screen.queryByText("Seller information")).not.toBeInTheDocument();
   });
 });
-

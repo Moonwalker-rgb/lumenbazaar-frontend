@@ -10,7 +10,7 @@ test("receipt detail route loads with valid receipt ID", async ({ page }) => {
 
   // Check for receipt information section
   await expect(page.getByRole("heading", { name: "Receipt information" })).toBeVisible();
-  
+
   // Check for status badge
   await expect(page.getByText("finalized")).toBeVisible();
 
@@ -30,7 +30,7 @@ test("receipt detail page displays finalized receipt with transaction link", asy
   // Check for Stellar explorer link
   const explorerLink = page.getByRole("link", { name: /View on Stellar explorer/ });
   await expect(explorerLink).toBeVisible();
-  
+
   // Verify the link points to Stellar explorer
   const href = await explorerLink.getAttribute("href");
   expect(href).toContain("stellar.expert");
@@ -65,11 +65,9 @@ test("receipt detail page handles malformed receipt IDs gracefully", async ({ pa
 
   // Should show error state
   await expect(page.getByRole("heading", { name: "Receipt unavailable" })).toBeVisible();
-  
+
   // Check for error description
-  await expect(
-    page.getByText(/The receipt could not be retrieved from the backend/)
-  ).toBeVisible();
+  await expect(page.getByText(/The receipt could not be retrieved from the backend/)).toBeVisible();
 
   // Check for retry button
   await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
@@ -79,7 +77,7 @@ test("receipt detail page displays pending receipt state", async ({ page }) => {
   // This would need a pending receipt fixture or mock
   // For now, we test the route structure is in place
   await page.goto("/receipts");
-  
+
   // The route should be accessible
   // In real testing, you'd navigate to an actual pending receipt
 });
@@ -96,7 +94,7 @@ test("receipt detail page displays failed receipt with failure information", asy
   if (page.url().includes("/receipts/receipt_failed_001")) {
     const failureSection = page.getByRole("heading", { name: "Failure information" });
     const failureExists = await failureSection.isVisible().catch(() => false);
-    
+
     if (failureExists) {
       await expect(failureSection).toBeVisible();
       await expect(page.getByText("Failure code", { exact: true })).toBeVisible();
@@ -133,7 +131,9 @@ test("receipt detail page displays desktop layout with multi-column grid", async
   await expect(page.getByRole("heading", { name: "Receipt information" })).toBeVisible();
 
   // Verify the grid layout is applied (md:grid-cols-2 xl:grid-cols-3)
-  const fields = page.locator('[class*="grid"]').filter({ hasNot: page.locator('[class*="space-y"]') });
+  const fields = page
+    .locator('[class*="grid"]')
+    .filter({ hasNot: page.locator('[class*="space-y"]') });
   await expect(fields.first()).toBeVisible();
 });
 
@@ -179,7 +179,7 @@ test("receipt detail page displays network-specific badges", async ({ page }) =>
 
   // Check for network badge
   const networkBadges = page.locator("button, span").filter({ hasText: /testnet|mainnet/ });
-  
+
   // At least the network badge should be visible
   const badges = page.locator("[class*='badge'], [class*='Badge']");
   await expect(badges.first()).toBeVisible();
@@ -216,7 +216,7 @@ test("receipt detail page displays seller information when available", async ({ 
 test("receipt detail page handles route with special characters in ID", async ({ page }) => {
   // Test that URL encoding is handled properly
   const encodedId = "receipt%3Atest%2F001";
-  
+
   await page.goto(`/receipts/${encodedId}`).catch(() => {
     // Navigation might fail for non-existent receipt, which is expected
   });
@@ -243,7 +243,9 @@ test("receipt detail page retry button works after backend failure", async ({ pa
   await expect(page.getByRole("heading", { name: "Receipt unavailable" })).toBeVisible();
 });
 
-test("receipt detail page displays valid testnet explorer link with correct URL format", async ({ page }) => {
+test("receipt detail page displays valid testnet explorer link with correct URL format", async ({
+  page
+}) => {
   await page.goto("/receipts/receipt_weather_001");
 
   // Wait for finality confirmation section
@@ -262,25 +264,27 @@ test("receipt detail page displays valid testnet explorer link with correct URL 
   await expect(explorerLink).toHaveAttribute("rel", "noreferrer");
 });
 
-test("receipt detail page handles finalized receipt with malformed transaction hash", async ({ page }) => {
+test("receipt detail page handles finalized receipt with malformed transaction hash", async ({
+  page
+}) => {
   // This test would require a fixture with a malformed hash
   // For now, we verify the page structure handles such cases gracefully
   await page.goto("/receipts/receipt_weather_001");
 
   // Verify the finality section loads successfully even if we were to have a malformed hash
   const finalitySection = page.getByRole("heading", { name: "Finality confirmation" });
-  
+
   // Either the section exists with a valid link, or doesn't exist at all (both are valid states)
   const sectionExists = await finalitySection.isVisible().catch(() => false);
-  
+
   if (sectionExists) {
     // If finality section exists, it should either have a valid explorer link or a warning
     const explorerLink = page.getByRole("link", { name: /View on Stellar explorer/ });
     const warningMessage = page.locator("text=/Transaction hash is invalid/");
-    
+
     const linkExists = await explorerLink.isVisible().catch(() => false);
     const warningExists = await warningMessage.isVisible().catch(() => false);
-    
+
     expect(linkExists || warningExists).toBe(true);
   }
 });
@@ -294,7 +298,7 @@ test("receipt explorer link navigates to correct network explorer", async ({ pag
 
   // Verify the opened page is on Stellar Expert
   await expect(newPage).toHaveURL(/stellar\.expert\/explorer/);
-  
+
   // Close the new page
   await newPage.close();
 });
@@ -333,7 +337,9 @@ test("receipt detail page displays network-specific explorer URLs", async ({ pag
   expect(href).not.toContain("/public/");
 });
 
-test("receipt detail page displays finalized state badge with success styling", async ({ page }) => {
+test("receipt detail page displays finalized state badge with success styling", async ({
+  page
+}) => {
   await page.goto("/receipts/receipt_weather_001");
 
   // Look for finalized status badge
@@ -343,7 +349,7 @@ test("receipt detail page displays finalized state badge with success styling", 
   // The badge should have success-related styling (check for class or color)
   const badge = statusBadges.first();
   const classes = await badge.getAttribute("class");
-  
+
   // Success tones typically include 'success' or 'green' in classes
   expect(classes).toBeTruthy();
 });
@@ -356,7 +362,7 @@ test("receipt detail displays transaction hash in proper format", async ({ page 
 
   // The hash should be displayed and be 64 characters
   const hashElements = page.locator("text=/[a-f0-9]{64}/i");
-  
+
   // At least one hash should be visible in finalized receipt
   const visibleHashCount = await hashElements.count();
   expect(visibleHashCount).toBeGreaterThan(0);
@@ -375,7 +381,7 @@ test("receipt detail page handles ledger display edge cases", async ({ page }) =
   // Get the ledger value (should be a number or "Unknown")
   const ledgerValue = ledgerLabel.locator("..").locator("p").last();
   const ledgerText = await ledgerValue.textContent();
-  
+
   // Should be either a number or "Unknown"
   expect(ledgerText).toMatch(/^\d+$|^Unknown$/);
 });
@@ -389,7 +395,7 @@ test("receipt detail page explorer link has proper accessibility attributes", as
   // Check for accessibility attributes
   await expect(explorerLink).toHaveAttribute("target", "_blank");
   await expect(explorerLink).toHaveAttribute("rel", "noreferrer");
-  
+
   // Verify link text is descriptive
   const linkText = await explorerLink.textContent();
   expect(linkText).toContain("View on Stellar explorer");

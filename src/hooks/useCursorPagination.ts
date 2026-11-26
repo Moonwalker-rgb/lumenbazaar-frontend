@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction
+} from "react";
 import { useSearchParams } from "next/navigation";
 import { z } from "zod";
 
@@ -129,6 +137,114 @@ function deduplicate<T>(newItems: T[], getKey: (item: T) => string, existingItem
   return deduplicated;
 }
 
+interface FetchCursorPageParams<T> {
+  abortControllerRef: { current: AbortController | null };
+  cursor: string | undefined;
+  direction: "forward" | "backward" | undefined;
+  getKey: (item: T) => string;
+  queryFn: UseCursorPaginationOptions<T>["queryFn"];
+  setError: Dispatch<SetStateAction<PaginationError | undefined>>;
+  setNextCursor: Dispatch<SetStateAction<string | undefined>>;
+  setPreviousCursor: Dispatch<SetStateAction<string | undefined>>;
+  setRows: Dispatch<SetStateAction<T[]>>;
+  setIsLoading: Dispatch<SetStateAction<boolean>>;
+}
+
+/**
+ * Fetch a page outside the hook so state updates are not traced back to the
+ * hook's initial-page effect.
+ */
+async function fetchCursorPage<T>({
+  abortControllerRef,
+  cursor,
+  direction,
+  getKey,
+  queryFn,
+  setError,
+  setNextCursor,
+  setPreviousCursor,
+  setRows,
+  setIsLoading
+}: FetchCursorPageParams<T>): Promise<void> {
+  // Abort previous request if any
+  if (abortControllerRef.current) {
+    abortControllerRef.current.abort();
+  }
+
+  const controller = new AbortController();
+  abortControllerRef.current = controller;
+
+  try {
+    setIsLoading(true);
+    setError(undefined);
+
+    // Validate cursor format
+    if (!isValidCursor(cursor)) {
+      setError({
+        code: "MALFORMED_CURSOR",
+        message: "Invalid cursor format. Starting from the beginning."
+      });
+      setRows([]);
+      setNextCursor(undefined);
+      setPreviousCursor(undefined);
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch data with timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
+    try {
+      const response = await queryFn(cursor, direction);
+
+      if (controller.signal.aborted) {
+        return;
+      }
+
+      clearTimeout(timeoutId);
+
+      // A navigation replaces the current page; deduplicate within that page
+      // while keeping the backend's order.
+      setRows(deduplicate(response.items, getKey));
+      setNextCursor(response.nextCursor);
+      setPreviousCursor(response.previousCursor);
+      setIsLoading(false);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  } catch (err) {
+    if (controller.signal.aborted) {
+      return;
+    }
+
+    // Detect stale cursor (backend returns 400 or empty)
+    const isStale =
+      err instanceof Error &&
+      (err.message.includes("400") || err.message.includes("Invalid cursor"));
+
+    setError({
+      code: isStale ? "STALE_CURSOR" : "NETWORK_ERROR",
+      message: isStale
+        ? "Page is outdated. Starting from the beginning."
+        : "Failed to load page. Please try again."
+    });
+
+    // On stale cursor, reset to first page
+    if (isStale) {
+      setRows([]);
+      setNextCursor(undefined);
+      setPreviousCursor(undefined);
+    }
+
+    setIsLoading(false);
+  } finally {
+    // Do not clear a newer request's controller when an older one settles.
+    if (abortControllerRef.current === controller) {
+      abortControllerRef.current = null;
+    }
+  }
+}
+
 /**
  * Hook for managing cursor-based pagination with URL persistence
  *
@@ -156,10 +272,14 @@ export function useCursorPagination<T>({
   onUpdateUrl
 }: UseCursorPaginationOptions<T>): UseCursorPaginationResult<T> {
   const searchParams = useSearchParams();
+  // useSearchParams() can be null outside the Next.js App Router (e.g. in
+  // unit tests). Normalize once so every read has a safe, stable fallback.
+  const fallbackParams = useMemo(() => searchParams ?? new URLSearchParams(), [searchParams]);
 
-  // State for current page
+  // State for current page. A fetch always starts on mount, so loading begins
+  // as true (the initial effect cannot set state synchronously).
   const [rows, setRows] = useState<T[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<PaginationError | undefined>();
 
   // Track pagination metadata
@@ -169,17 +289,31 @@ export function useCursorPagination<T>({
   // Abort controller for race condition handling
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Keep the fetch callback stable: inline queryFn/getKey props change on every
+  // render and must not retrigger the initial-page effect.
+  const queryFnRef = useRef(queryFn);
+  const getKeyRef = useRef(getKey);
+  useEffect(() => {
+    queryFnRef.current = queryFn;
+    getKeyRef.current = getKey;
+  }, [queryFn, getKey]);
+
+  // The last cursor/direction fetched, so a navigation does not fetch twice
+  // when the URL change it triggers is reflected back into the hook.
+  const lastRequestKeyRef = useRef<string | null>(null);
+
   // Read cursor from URL
-  const currentCursor = urlSearchParams?.get("cursor") ?? searchParams.get("cursor") ?? undefined;
+  const currentCursor = urlSearchParams?.get("cursor") ?? fallbackParams.get("cursor") ?? undefined;
   const currentDirection = (urlSearchParams?.get("direction") ??
-    searchParams.get("direction")) as "forward" | "backward" | undefined;
+    fallbackParams.get("direction") ??
+    undefined) as "forward" | "backward" | undefined;
 
   /**
    * Update URL with new cursor and direction
    */
   const updateUrl = useCallback(
     (newCursor: string | undefined, direction: "forward" | "backward" | undefined) => {
-      const params = new URLSearchParams(urlSearchParams ?? searchParams);
+      const params = new URLSearchParams(urlSearchParams ?? fallbackParams);
 
       if (newCursor) {
         params.set("cursor", newCursor);
@@ -201,131 +335,88 @@ export function useCursorPagination<T>({
         window.history.replaceState(null, "", newUrl);
       }
     },
-    [searchParams, urlSearchParams, onUpdateUrl]
+    [fallbackParams, urlSearchParams, onUpdateUrl]
   );
 
   /**
    * Fetch page of data
    */
   const fetchPage = useCallback(
-    async (cursor: string | undefined, direction: "forward" | "backward" | undefined) => {
-      // Abort previous request if any
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
-      try {
-        setIsLoading(true);
-        setError(undefined);
-
-        // Validate cursor format
-        if (!isValidCursor(cursor)) {
-          setError({
-            code: "MALFORMED_CURSOR",
-            message: "Invalid cursor format. Starting from the beginning."
-          });
-          setRows([]);
-          setNextCursor(undefined);
-          setPreviousCursor(undefined);
-          return;
-        }
-
-        // Fetch data with timeout
-        const timeoutId = setTimeout(() => controller.abort(), 30_000);
-
-        try {
-          const response = await queryFn(cursor, direction);
-
-          if (controller.signal.aborted) {
-            return;
-          }
-
-          clearTimeout(timeoutId);
-
-          // Deduplicate and merge results
-          const dedupedItems = deduplicate(response.items, getKey, rows);
-          const allRows = [...rows, ...dedupedItems];
-
-          setRows(allRows);
-          setNextCursor(response.nextCursor);
-          setPreviousCursor(response.previousCursor);
-          setIsLoading(false);
-        } finally {
-          clearTimeout(timeoutId);
-        }
-      } catch (err) {
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        // Detect stale cursor (backend returns 400 or empty)
-        const isStale =
-          err instanceof Error &&
-          (err.message.includes("400") || err.message.includes("Invalid cursor"));
-
-        setError({
-          code: isStale ? "STALE_CURSOR" : "NETWORK_ERROR",
-          message: isStale
-            ? "Page is outdated. Starting from the beginning."
-            : "Failed to load page. Please try again."
-        });
-
-        // On stale cursor, reset to first page
-        if (isStale) {
-          setRows([]);
-          setNextCursor(undefined);
-          setPreviousCursor(undefined);
-        }
-
-        setIsLoading(false);
-      } finally {
-        abortControllerRef.current = null;
-      }
-    },
-    [queryFn, getKey, rows]
+    (cursor: string | undefined, direction: "forward" | "backward" | undefined) =>
+      fetchCursorPage({
+        abortControllerRef,
+        cursor,
+        direction,
+        getKey: getKeyRef.current,
+        queryFn: queryFnRef.current,
+        setError,
+        setNextCursor,
+        setPreviousCursor,
+        setRows,
+        setIsLoading
+      }),
+    []
   );
 
   /**
    * Load initial page or current page on mount/cursor change
    */
   useEffect(() => {
-    fetchPage(currentCursor, currentDirection);
+    const key = `${currentCursor ?? ""}\u0000${currentDirection ?? ""}`;
+    if (lastRequestKeyRef.current === key) {
+      return;
+    }
+    lastRequestKeyRef.current = key;
+
+    queueMicrotask(() => {
+      void fetchPage(currentCursor, currentDirection);
+    });
   }, [currentCursor, currentDirection, fetchPage]);
+
+  /**
+   * Navigate to a page, updating the URL once and fetching that page once.
+   * Existing rows stay visible until the new page arrives.
+   */
+  const navigate = useCallback(
+    (cursor: string, direction: "forward" | "backward") => {
+      onBeforeNavigation?.(direction);
+      updateUrl(cursor, direction);
+      lastRequestKeyRef.current = `${cursor}\u0000${direction}`;
+      setIsLoading(true);
+      void fetchPage(cursor, direction);
+    },
+    [fetchPage, onBeforeNavigation, updateUrl]
+  );
 
   /**
    * Navigate to next page
    */
   const handleNextPage = useCallback(() => {
-    if (!nextCursor) return;
-
-    onBeforeNavigation?.("forward");
-    updateUrl(nextCursor, "forward");
-
-    // Reset current rows to avoid showing old data during transition
-    setRows([]);
-  }, [nextCursor, updateUrl, onBeforeNavigation]);
+    if (nextCursor) {
+      navigate(nextCursor, "forward");
+    }
+  }, [nextCursor, navigate]);
 
   /**
    * Navigate to previous page
    */
   const handlePreviousPage = useCallback(() => {
-    if (!previousCursor) return;
-
-    onBeforeNavigation?.("backward");
-    updateUrl(previousCursor, "backward");
-
-    // Reset current rows to avoid showing old data during transition
-    setRows([]);
-  }, [previousCursor, updateUrl, onBeforeNavigation]);
+    if (previousCursor) {
+      navigate(previousCursor, "backward");
+    }
+  }, [previousCursor, navigate]);
 
   /**
    * Reset to first page
    */
   const handleResetPagination = useCallback(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
     updateUrl(undefined, undefined);
+    // Let the URL-driven effect load the first page when the URL actually
+    // changes; with a mocked onUpdateUrl the rows simply stay cleared.
+    lastRequestKeyRef.current = null;
+    setIsLoading(false);
     setRows([]);
     setNextCursor(undefined);
     setPreviousCursor(undefined);

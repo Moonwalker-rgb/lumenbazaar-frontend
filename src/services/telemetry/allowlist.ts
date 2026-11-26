@@ -35,11 +35,11 @@ export const EVENT_ALLOWLIST: Record<TelemetryEventType, string[]> = {
 export const FIELD_BOUNDS = {
   // Integer bounds (milliseconds, counts, etc.)
   duration_ms: { min: 0, max: 300000 }, // 5 minutes max
-  
+
   // String bounds
   assetCode: { maxLength: 12, pattern: /^[A-Za-z0-9]*$/ }, // alphanumeric, max 12 chars
   source: { maxLength: 50, pattern: /^[A-Za-z0-9_]*$/ }, // alphanumeric + underscore, max 50 chars
-  
+
   // Enums
   status: ["initiated"],
   errorCode: [
@@ -60,7 +60,7 @@ export const FIELD_BOUNDS = {
     "UNKNOWN_ERROR"
   ],
   resourceType: ["service", "data"],
-  telemetryEnabled: ["boolean"],
+  telemetryEnabled: { type: "boolean" },
   consentStatus: ["enabled", "disabled_by_config", "disabled_by_consent", "no_consent_given"]
 } as const;
 
@@ -70,7 +70,7 @@ export const FIELD_BOUNDS = {
  */
 export function validateFieldBound(fieldName: string, value: unknown): string | null {
   const bound = (FIELD_BOUNDS as Record<string, unknown>)[fieldName];
-  
+
   if (!bound) {
     // Field not in bounds definition, but may be allowed (this should not happen if EVENT_ALLOWLIST is correct)
     return null;
@@ -84,9 +84,16 @@ export function validateFieldBound(fieldName: string, value: unknown): string | 
     return null;
   }
 
-  // Handle object bounds (integer, string)
+  // Handle object bounds (integer, string, boolean)
   if (typeof bound === "object" && bound !== null) {
     const boundsObj = bound as Record<string, unknown>;
+
+    // Boolean bounds
+    if (boundsObj.type === "boolean") {
+      if (typeof value !== "boolean") {
+        return `Field "${fieldName}" must be a boolean, got ${typeof value}`;
+      }
+    }
 
     // Integer bounds
     if ("min" in boundsObj || "max" in boundsObj) {

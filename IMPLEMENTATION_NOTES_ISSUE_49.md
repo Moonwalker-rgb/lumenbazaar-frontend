@@ -7,18 +7,21 @@ This document describes the implementation of automated accessibility checks acr
 ## What Was Implemented
 
 ### 1. Dependencies Added
+
 - **`@axe-core/playwright@4.11.1`** — WCAG 2.x Level A/AA scanning library
 - Added to `package.json` devDependencies
 
 ### 2. Core Fixtures & Helpers
 
 #### `tests/fixtures/routes.ts`
+
 - Central inventory of 12+ primary routes (`PRIMARY_ROUTES`)
 - Route definitions include: path, name, platforms, optional skip reason
 - Covers all major sections: dashboard, explore, seller, operators, settings, docs, playground, transactions, receipts
 - `EXCLUDED_ROUTES` array for routes with documented reasons (currently empty)
 
 #### `tests/fixtures/accessibility.ts`
+
 - `runSharedAssertions()` function that validates 6 core accessibility patterns:
   1. Exactly one `<main>` landmark
   2. Consistent, labeled navigation and header
@@ -29,6 +32,7 @@ This document describes the implementation of automated accessibility checks acr
 - `getPageContext()` helper for debugging
 
 #### `tests/fixtures/a11y-exceptions.ts`
+
 - Framework for documenting known exceptions with:
   - `ruleId` (axe rule ID, e.g., "color-contrast")
   - `route` (where the issue exists)
@@ -44,6 +48,7 @@ This document describes the implementation of automated accessibility checks acr
 ### 3. E2E Test Suite
 
 #### `tests/e2e/a11y.spec.ts`
+
 Main Playwright test spec with three test blocks:
 
 1. **Shared Assertions** — Runs `runSharedAssertions()` on all PRIMARY_ROUTES
@@ -63,7 +68,9 @@ Main Playwright test spec with three test blocks:
 ### 4. Unit Test Suites
 
 #### `tests/unit/a11y-exceptions.test.ts`
+
 Vitest suite validating the exceptions framework:
+
 - No expired exceptions
 - All required fields (ruleId, route, selector, reason, owner, expiryDate)
 - Valid date format (ISO 8601)
@@ -71,7 +78,9 @@ Vitest suite validating the exceptions framework:
 - Owner field follows expected format
 
 #### `tests/unit/routes.test.ts`
+
 Vitest suite validating route coverage:
+
 - PRIMARY_ROUTES covers all major sections
 - Unique paths (no duplicates)
 - Valid path format (starts with /)
@@ -81,7 +90,9 @@ Vitest suite validating route coverage:
 ### 5. Documentation
 
 #### `docs/accessibility-testing.md`
+
 Comprehensive guide including:
+
 - Overview of what's tested
 - How to run tests locally (`pnpm test:e2e:a11y`, specific routes, desktop/mobile)
 - Test structure explanation
@@ -96,6 +107,7 @@ Comprehensive guide including:
 ### 6. CI Integration
 
 Updated `.github/workflows/ci.yml`:
+
 - Added `pnpm test:e2e:a11y` step after existing tests
 - Runs a11y tests on both desktop (Chrome) and mobile (Pixel 7) viewports
 - Runs on every PR and main branch push
@@ -103,6 +115,7 @@ Updated `.github/workflows/ci.yml`:
 ### 7. Package.json Updates
 
 Added script:
+
 ```json
 "test:e2e:a11y": "playwright test --config playwright.config.ts tests/e2e/a11y.spec.ts"
 ```
@@ -183,11 +196,13 @@ pnpm test routes
 ### Add a New Route
 
 1. Add to `tests/fixtures/routes.ts`:
+
    ```typescript
    { path: "/my-new-route", name: "My New Route" }
    ```
 
 2. Run tests:
+
    ```bash
    pnpm test:e2e:a11y
    ```
@@ -197,6 +212,7 @@ pnpm test routes
 ### Add an Exception
 
 1. Edit `tests/fixtures/a11y-exceptions.ts`:
+
    ```typescript
    {
      ruleId: "color-contrast",
@@ -246,7 +262,9 @@ pnpm test routes
 ## Test Outputs & Validation
 
 ### Shared Assertions
+
 Each assertion logs:
+
 - Number of landmarks found
 - Heading hierarchy
 - Focus element
@@ -254,13 +272,17 @@ Each assertion logs:
 - Skip link status
 
 ### Axe Scanning
+
 Reports:
+
 - Violation rule ID, impact, and affected nodes
 - Number of exceptions applied
 - Violations remaining (test passes if 0)
 
 ### Exception Validation
+
 Checks:
+
 - Expired dates (fails if expiryDate < today)
 - Stale exceptions (fails if exception found but no violation exists)
 - Malformed entries (fails if owner, reason, or expiryDate missing)
@@ -276,7 +298,7 @@ Checks:
 ✅ Color contrast (basic detection)  
 ✅ Form labels  
 ✅ Alt text for images  
-✅ Live region announcements  
+✅ Live region announcements
 
 ### What's NOT Tested (Manual Review Required)
 
@@ -285,7 +307,7 @@ Checks:
 ❌ Complex interaction patterns  
 ❌ Content readability and clarity  
 ❌ Color blindness simulation  
-❌ WCAG 3.0 or AAA compliance  
+❌ WCAG 3.0 or AAA compliance
 
 ## References
 
@@ -299,7 +321,7 @@ Checks:
 
 **Branch**: `issue-49-accessibility-checks`  
 **Files Changed**: 9 new files, 2 modified files  
-**Total Lines**: ~1,800 (fixtures, tests, docs)  
+**Total Lines**: ~1,800 (fixtures, tests, docs)
 
 To commit and push (if PowerShell script doesn't work):
 

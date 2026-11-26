@@ -10,14 +10,16 @@ import {
  * Result of a preflight payment check.
  * Either successful validation or a specific error condition.
  */
-export type PreflightCheckResult = {
-  success: true;
-  accountInfo: StellarAccountInfo;
-  validation: PreflightValidation;
-} | {
-  success: false;
-  error: PreflightCheckError;
-};
+export type PreflightCheckResult =
+  | {
+      success: true;
+      accountInfo: StellarAccountInfo;
+      validation: PreflightValidation;
+    }
+  | {
+      success: false;
+      error: PreflightCheckError;
+    };
 
 /**
  * Specific error conditions that can occur during preflight checks.
@@ -188,9 +190,7 @@ export async function checkPaymentPreflight(
  * Convert a preflight check result to an API error-like object.
  * Used for consistent error handling in the payment flow.
  */
-export function preflightCheckErrorToApiError(
-  error: PreflightCheckError
-): {
+export function preflightCheckErrorToApiError(error: PreflightCheckError): {
   code: string;
   message: string;
   details?: Record<string, unknown>;
@@ -316,7 +316,7 @@ function isValidStellarAddress(address: string): boolean {
   // Additional check: verify base32 format
   try {
     // Stellar addresses are base32-encoded, so they should only contain A-Z and 2-7
-    return /^G[A-Z2-7]{54}$/.test(address);
+    return /^G[A-Z2-7]{55}$/.test(address);
   } catch {
     return false;
   }

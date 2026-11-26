@@ -26,37 +26,65 @@ import {
 describe("isValidStellarAccountAddress", () => {
   describe("valid addresses", () => {
     it("accepts classic account addresses (G*)", () => {
-      expect(isValidStellarAccountAddress("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")).toBe(true);
-      expect(isValidStellarAccountAddress("GBUQWP3BOUZX34ULNQG23RQ6F4BFXWBXMODWQCDNYCD3MHALB5O6OVY")).toBe(true);
-      expect(isValidStellarAccountAddress("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")).toBe(true);
+      expect(
+        isValidStellarAccountAddress("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")
+      ).toBe(true);
+      expect(
+        isValidStellarAccountAddress("GBUQWP3BOUZX34ULNQG23RQ6F4BFXWBXMODWQCDNYCD3MHALB5O6OVYA")
+      ).toBe(true);
+      expect(
+        isValidStellarAccountAddress("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")
+      ).toBe(true);
     });
 
     it("accepts muxed account addresses (M*)", () => {
-      expect(isValidStellarAccountAddress("MBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")).toBe(true);
-      expect(isValidStellarAccountAddress("MAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")).toBe(true);
+      expect(
+        isValidStellarAccountAddress("MBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")
+      ).toBe(true);
+      expect(
+        isValidStellarAccountAddress("MAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")
+      ).toBe(true);
     });
   });
 
   describe("invalid addresses", () => {
     it("rejects contract addresses (C*)", () => {
-      expect(isValidStellarAccountAddress("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")).toBe(false);
-      expect(isValidStellarAccountAddress("CASSETDEMO0000000000000000000000000000000000000000000")).toBe(false);
+      expect(
+        isValidStellarAccountAddress("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")
+      ).toBe(false);
+      expect(
+        isValidStellarAccountAddress("CASSETDEMOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+      ).toBe(false);
     });
 
     it("rejects addresses with wrong length", () => {
-      expect(isValidStellarAccountAddress("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQ")).toBe(false); // 55 chars
-      expect(isValidStellarAccountAddress("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQEE")).toBe(false); // 57 chars
+      expect(
+        isValidStellarAccountAddress("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQ")
+      ).toBe(false); // 55 chars
+      expect(
+        isValidStellarAccountAddress("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQEE")
+      ).toBe(false); // 57 chars
     });
 
     it("rejects addresses with invalid characters", () => {
-      expect(isValidStellarAccountAddress("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQ0")).toBe(false); // digit 0
-      expect(isValidStellarAccountAddress("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQ-")).toBe(false); // hyphen
-      expect(isValidStellarAccountAddress("gbzxn7pirzgnmhgaiqw7qejww36l5cvvnryanmdw2g3qof2vcr4dqsqe")).toBe(false); // lowercase
+      expect(
+        isValidStellarAccountAddress("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQ0")
+      ).toBe(false); // digit 0
+      expect(
+        isValidStellarAccountAddress("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQ-")
+      ).toBe(false); // hyphen
+      expect(
+        isValidStellarAccountAddress("gbzxn7pirzgnmhgaiqw7qejww36l5cvvnryanmdw2g3qof2vcr4dqsqe")
+      ).toBe(false); // lowercase
     });
 
     it("rejects invalid prefixes", () => {
-      expect(isValidStellarAccountAddress("ABZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")).toBe(false); // A prefix
-      expect(isValidStellarAccountAddress("ZBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")).toBe(false); // Z prefix
+      expect(
+        isValidStellarAccountAddress("ABZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")
+      ).toBe(false); // A prefix
+      expect(
+        isValidStellarAccountAddress("ZBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")
+      ).toBe(false); // Z prefix
     });
 
     it("rejects non-string values", () => {
@@ -77,31 +105,53 @@ describe("isValidStellarAccountAddress", () => {
 describe("isValidSorobanContractId", () => {
   describe("valid contract IDs", () => {
     it("accepts Soroban contract addresses (C*)", () => {
-      expect(isValidSorobanContractId("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")).toBe(true);
-      expect(isValidSorobanContractId("CASSETDEMO0000000000000000000000000000000000000000000")).toBe(true);
-      expect(isValidSorobanContractId("CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")).toBe(true);
+      expect(
+        isValidSorobanContractId("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")
+      ).toBe(true);
+      expect(
+        isValidSorobanContractId("CASSETDEMOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+      ).toBe(true);
+      expect(
+        isValidSorobanContractId("CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")
+      ).toBe(true);
     });
   });
 
   describe("invalid contract IDs", () => {
     it("rejects account addresses (G* or M*)", () => {
-      expect(isValidSorobanContractId("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")).toBe(false);
-      expect(isValidSorobanContractId("MBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")).toBe(false);
+      expect(
+        isValidSorobanContractId("GBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")
+      ).toBe(false);
+      expect(
+        isValidSorobanContractId("MBZXN7PIRZGNMHGAIQW7QEJWW36L5CVVNRYANMDW2G3QOF2VCR4DQSQE")
+      ).toBe(false);
     });
 
     it("rejects IDs with wrong length", () => {
-      expect(isValidSorobanContractId("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJF")).toBe(false); // 55 chars
-      expect(isValidSorobanContractId("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFSS")).toBe(false); // 57 chars
+      expect(
+        isValidSorobanContractId("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJF")
+      ).toBe(false); // 55 chars
+      expect(
+        isValidSorobanContractId("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFSS")
+      ).toBe(false); // 57 chars
     });
 
     it("rejects IDs with invalid characters", () => {
-      expect(isValidSorobanContractId("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJF0")).toBe(false); // digit 0
-      expect(isValidSorobanContractId("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJF-")).toBe(false); // hyphen
+      expect(
+        isValidSorobanContractId("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJF0")
+      ).toBe(false); // digit 0
+      expect(
+        isValidSorobanContractId("CB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJF-")
+      ).toBe(false); // hyphen
     });
 
     it("rejects invalid prefixes", () => {
-      expect(isValidSorobanContractId("GB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")).toBe(false); // G prefix
-      expect(isValidSorobanContractId("AB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")).toBe(false); // A prefix
+      expect(
+        isValidSorobanContractId("GB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")
+      ).toBe(false); // G prefix
+      expect(
+        isValidSorobanContractId("AB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")
+      ).toBe(false); // A prefix
     });
 
     it("rejects non-string values", () => {
@@ -112,8 +162,12 @@ describe("isValidSorobanContractId", () => {
     });
 
     it("rejects common format mistakes", () => {
-      expect(isValidSorobanContractId("C-256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")).toBe(false); // hyphen
-      expect(isValidSorobanContractId("0xCB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")).toBe(false); // hex prefix
+      expect(
+        isValidSorobanContractId("C-256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")
+      ).toBe(false); // hyphen
+      expect(
+        isValidSorobanContractId("0xCB256KDRXDO2FYJN3YBYZE5KCU46WIIE67DRP5T7HI45DRH2GM6YOJFS")
+      ).toBe(false); // hex prefix
     });
   });
 });

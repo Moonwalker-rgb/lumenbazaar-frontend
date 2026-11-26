@@ -9,6 +9,7 @@ This document describes the mobile regression test suite for seller workflows in
 ## Test Coverage
 
 ### Test File
+
 - Location: `tests/e2e/seller-mobile-workflow.spec.ts`
 - Viewport: Pixel 7 (412×915px mobile device)
 - Framework: Playwright with synthetic test data
@@ -16,6 +17,7 @@ This document describes the mobile regression test suite for seller workflows in
 ### Workflows Covered
 
 #### 1. Resource Creation Workflow
+
 - **Basic Info Step**: Resource name, endpoint URL input
   - No horizontal overflow validation
   - Touch-safe input fields (≥40px height)
@@ -45,24 +47,28 @@ This document describes the mobile regression test suite for seller workflows in
   - All required fields visible
 
 #### 2. Validation and Error Recovery
+
 - Network error handling and recovery
 - Form data persistence on navigation
 - Clear error message display on mobile
 - Validation error messaging
 
 #### 3. Touch Interactions
+
 - Rapid button tap handling
 - Hover/active state visibility on mobile
 - Form field tap targets (min 44×44px)
 - Touch-friendly form submission
 
 #### 4. Safe Defaults
+
 - Resources not published by default
 - "Save and exit" option prevents publishing
 - Draft state preservation
 - Clear draft option availability
 
 #### 5. Desktop and Mobile Consistency
+
 - Content structure parity
 - Color contrast and accessibility
 - Text input support
@@ -71,6 +77,7 @@ This document describes the mobile regression test suite for seller workflows in
 ## Test Execution
 
 ### Running All Seller Mobile Tests
+
 ```bash
 # Run mobile seller workflow tests
 pnpm exec playwright test tests/e2e/seller-mobile-workflow.spec.ts --project=mobile
@@ -80,12 +87,14 @@ pnpm exec playwright test tests/e2e/seller-mobile-workflow.spec.ts --project=mob
 ```
 
 ### Running with Desktop Comparison
+
 ```bash
 # Run on both desktop and mobile to verify consistency
 pnpm exec playwright test tests/e2e/seller-mobile-workflow.spec.ts
 ```
 
 ### Test Validation Commands
+
 ```bash
 # Type check
 pnpm check
@@ -100,11 +109,13 @@ pnpm check
 ## Acceptance Criteria Verification
 
 ### ✓ Every seller step is reachable without overflow
+
 - Tests validate `scrollWidth <= clientWidth` for each step
 - Basic Info, Pricing, Metadata, Integration, and Publish steps all tested
 - Form inputs and buttons verified for visibility on 412px width
 
 ### ✓ Validation and recovery states are exercised
+
 - Form validation errors tested for empty required fields
 - Invalid URL validation tested
 - Network error recovery scenario tested
@@ -112,12 +123,14 @@ pnpm check
 - Error message visibility on mobile verified
 
 ### ✓ Tests do not publish live resources by default
+
 - "Save and exit" button verified to not publish
 - Safe defaults confirm resources remain in draft state
 - Draft state preservation tested
 - Publishing requires explicit action verification
 
 ### ✓ Responsive behavior verified
+
 - No horizontal overflow on supported mobile viewports
 - Touch-safe interaction sizing (40px+ buttons and inputs)
 - Form controls accessible without scroll on mobile
@@ -126,6 +139,7 @@ pnpm check
 ## Test Data
 
 All tests use synthetic/example data:
+
 - API names: "Test Weather API", "Mobile Test API", "Publish Test API"
 - URLs: https://api.example.com/* (non-existent example domains)
 - No production data or live resources used
@@ -134,6 +148,7 @@ All tests use synthetic/example data:
 ## Security and Protocol Constraints
 
 ### Enforced in Tests
+
 - Testnet-only validation
 - No signed payloads in tests
 - No private keys or seed phrases
@@ -141,6 +156,7 @@ All tests use synthetic/example data:
 - Safe defaults prevent accidental publishing
 
 ### Not Tested (Out of Scope)
+
 - Domain verification workflow (covered separately)
 - Resource editing for existing resources
 - Asset trust verification on seller side
@@ -149,6 +165,7 @@ All tests use synthetic/example data:
 ## Running Verification
 
 ### Pre-PR Validation
+
 ```bash
 # 1. Type checking and linting
 pnpm check
@@ -161,7 +178,9 @@ pnpm exec playwright test tests/e2e/seller-mobile-workflow.spec.ts
 ```
 
 ### CI/CD Integration
+
 Tests run automatically in CI pipelines:
+
 - Desktop Chrome project
 - Mobile Pixel 7 project
 
@@ -170,6 +189,7 @@ Both viewports ensure responsive behavior is maintained.
 ## Debugging Tests
 
 ### View Test Traces
+
 ```bash
 # Run with headed browser for debugging
 pnpm exec playwright test tests/e2e/seller-mobile-workflow.spec.ts --project=mobile --headed
@@ -179,6 +199,7 @@ pnpm exec playwright show-trace trace.zip
 ```
 
 ### Test Debugging Tips
+
 - Tests use `timeout: 5000` for visibility checks to allow for async renders
 - Horizontal overflow checked via `scrollWidth <= clientWidth`
 - Touch target sizes checked for minimum 40px height (44px recommended, allowing 4px variance)
@@ -187,6 +208,7 @@ pnpm exec playwright show-trace trace.zip
 ## Documentation Updates
 
 This document serves as the validation evidence for:
+
 - Acceptance criterion: "Every seller step is reachable without overflow"
 - Acceptance criterion: "Validation and recovery states are exercised"
 - Acceptance criterion: "Tests do not publish live resources by default"
@@ -195,13 +217,16 @@ This document serves as the validation evidence for:
 ## Test Maintenance
 
 ### When to Update Tests
+
 - When new seller workflow steps are added
 - When seller components receive responsive updates
 - When mobile viewport requirements change
 - When error handling flows change
 
 ### Test Stability
+
 Tests are designed to be:
+
 - **Resilient**: Use role-based selectors which are more stable than className selectors
 - **Clear**: Explicit visibility checks before interactions
 - **Safe**: No state pollution between tests via `test.beforeEach` cleanup
@@ -210,6 +235,7 @@ Tests are designed to be:
 ## Future Enhancements
 
 Potential future test additions:
+
 - Resource editing workflow on mobile
 - Domain verification workflow mobile tests
 - Asset trust verification mobile tests

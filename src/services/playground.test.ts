@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { demoResources } from "@/fixtures/lumenbazaar";
-import { paymentFlowStateLabels } from "@/services/api/schemas";
+import {
+  paymentFlowStateLabels,
+  type PaymentVerification,
+  type Settlement
+} from "@/services/api/schemas";
 
 import {
   buildPaymentRequiredPreview,
@@ -127,7 +131,7 @@ describe("payment playground helpers", () => {
     });
 
     it("marks live verification with explicit live dataMode", () => {
-      const mockLiveVerification = {
+      const mockLiveVerification: PaymentVerification = {
         isValid: true,
         extra: {
           lumenbazaar: {
@@ -141,14 +145,14 @@ describe("payment playground helpers", () => {
         }
       };
 
-      const marked = markVerificationAsLive(mockLiveVerification as any);
+      const marked = markVerificationAsLive(mockLiveVerification);
 
       expect(marked.dataMode).toBe("live");
       expect(marked.isValid).toBe(true);
     });
 
     it("marks live settlement with explicit live dataMode", () => {
-      const mockLiveSettlement = {
+      const mockLiveSettlement: Settlement = {
         success: true,
         amount: "500000",
         network: "stellar:testnet",
@@ -159,13 +163,14 @@ describe("payment playground helpers", () => {
             ledger: 113_300,
             paymentAttemptId: "attempt_live_123",
             receiptId: "receipt_live_123",
+            settlementId: "settlement_live_123",
             status: "confirmed",
             transactionHash: "abc123def456"
           }
         }
       };
 
-      const marked = markSettlementAsLive(mockLiveSettlement as any);
+      const marked = markSettlementAsLive(mockLiveSettlement);
 
       expect(marked.dataMode).toBe("live");
       expect(marked.success).toBe(true);
@@ -177,7 +182,9 @@ describe("payment playground helpers", () => {
       const settlement = simulateSettlement(request, verification);
 
       // Synthetic hash should be the predictable playground hash
-      expect(settlement.transaction).toBe("d8f22ec3e5f24f1ba6ef0d42370c8c3fb7fd7d845f9df04379524665b86a16e4");
+      expect(settlement.transaction).toBe(
+        "d8f22ec3e5f24f1ba6ef0d42370c8c3fb7fd7d845f9df04379524665b86a16e4"
+      );
       // And marked as simulation
       expect(settlement.dataMode).toBe("simulation");
     });
@@ -197,7 +204,7 @@ describe("payment playground helpers", () => {
             status: "verified"
           }
         }
-      } as any);
+      } satisfies PaymentVerification);
 
       // Type system ensures they can be distinguished
       expect(simulated.dataMode).toBe("simulation");

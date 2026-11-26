@@ -7,10 +7,16 @@ import { SettingsPanel } from "@/components/settings/settings-panel";
 import { TransactionDashboard } from "@/components/transactions/transaction-dashboard";
 import type { OperatorHealthRow } from "@/services/operators";
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/transactions",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams()
+}));
+
 describe("implemented flow pages", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it("filters transaction rows by status", () => {
+  it("filters transaction rows by status", async () => {
     vi.stubEnv("NEXT_PUBLIC_LUMENBAZAAR_ENV", "demo");
     render(<TransactionDashboard />);
 
@@ -20,7 +26,7 @@ describe("implemented flow pages", () => {
       target: { value: "failed" }
     });
 
-    expect(screen.getByText("AUTH_EXPIRED")).toBeInTheDocument();
+    expect(await screen.findByText("AUTH_EXPIRED")).toBeInTheDocument();
     expect(screen.queryByText("attempt_rag_001")).not.toBeInTheDocument();
   });
 

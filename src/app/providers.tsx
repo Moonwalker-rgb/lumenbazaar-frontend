@@ -79,11 +79,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <MotionProvider>
-        <NetworkStatusProvider>
-          <TelemetryProvider service={telemetryService}>
-            <SellerSessionProvider>{children}</SellerSessionProvider>
-          </TelemetryProvider>
-        </NetworkStatusProvider>
+          <NetworkStatusProvider>
+            <TelemetryProvider service={telemetryService}>
+              <SellerSessionProvider>{children}</SellerSessionProvider>
+            </TelemetryProvider>
+          </NetworkStatusProvider>
         </MotionProvider>
       </ThemeProvider>
     </QueryClientProvider>

@@ -3,14 +3,16 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { createQueryClient } from "@/services/api/query";
+import { loadOperatorSnapshot } from "@/services/operators";
 
 import { OperatorHealthPage, OperatorHealthTable } from "./operator-health-table";
 
+const loadOperatorSnapshotMock = vi.mocked(loadOperatorSnapshot);
+
 // Mock the operator service
 vi.mock("@/services/operators", async () => {
-  const actual = await vi.importActual<typeof import("@/services/operators")>(
-    "@/services/operators"
-  );
+  const actual =
+    await vi.importActual<typeof import("@/services/operators")>("@/services/operators");
   return {
     ...actual,
     loadOperatorSnapshot: vi.fn()
@@ -19,8 +21,7 @@ vi.mock("@/services/operators", async () => {
 
 describe("OperatorHealthPage", () => {
   it("renders health table when data is successfully loaded", async () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockResolvedValue({
+    loadOperatorSnapshotMock.mockResolvedValue({
       checkedAt: "2026-10-15T10:00:00Z",
       conformance: null,
       healthRows: [
@@ -100,8 +101,7 @@ describe("OperatorHealthPage", () => {
   });
 
   it("renders loading state while fetching operator snapshot", () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockImplementation(() => new Promise(() => {})); // Never resolves
+    loadOperatorSnapshotMock.mockImplementation(() => new Promise(() => {})); // Never resolves
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -113,8 +113,7 @@ describe("OperatorHealthPage", () => {
   });
 
   it("renders error state when snapshot is unavailable", async () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockRejectedValue(new Error("Backend offline"));
+    loadOperatorSnapshotMock.mockRejectedValue(new Error("Backend offline"));
 
     render(
       <QueryClientProvider client={createQueryClient()}>
@@ -122,16 +121,18 @@ describe("OperatorHealthPage", () => {
       </QueryClientProvider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText("Dependency health unavailable")).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText("Dependency health unavailable")).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
-    expect(screen.getByText(/could not be verified/i)).toBeInTheDocument();
+    expect(screen.getByText("Backend offline")).toBeInTheDocument();
   });
 
   it("displays unknown status for all services when API is completely unavailable", async () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockResolvedValue({
+    loadOperatorSnapshotMock.mockResolvedValue({
       checkedAt: "2026-10-15T10:00:00Z",
       conformance: null,
       healthRows: [
@@ -218,8 +219,7 @@ describe("OperatorHealthPage", () => {
   });
 
   it("displays partial outage with mixed operational and unknown states", async () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockResolvedValue({
+    loadOperatorSnapshotMock.mockResolvedValue({
       checkedAt: "2026-10-15T10:00:00Z",
       conformance: null,
       healthRows: [
@@ -298,8 +298,7 @@ describe("OperatorHealthPage", () => {
   });
 
   it("never renders fixture data in unavailable state", async () => {
-    const { loadOperatorSnapshot } = require("@/services/operators");
-    loadOperatorSnapshot.mockResolvedValue({
+    loadOperatorSnapshotMock.mockResolvedValue({
       checkedAt: "2026-10-15T10:00:00Z",
       conformance: null,
       healthRows: [

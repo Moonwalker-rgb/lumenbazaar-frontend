@@ -208,7 +208,9 @@ function decodeChallenge(encoded: string): PaymentRequiredV2 {
   try {
     const decoded = decodePaymentRequiredHeader(encoded);
     const official = PaymentRequiredV2Schema.parse(decoded);
-    const exactAccepts = official.accepts.filter((requirement) => requirement.scheme === "exact");
+    const exactAccepts = official.accepts.filter(
+      (requirement: { scheme: string }) => requirement.scheme === "exact"
+    );
     if (exactAccepts.length === 0) {
       throw new ChallengeError(
         "CHALLENGE_UNSUPPORTED",
@@ -261,7 +263,9 @@ function validateCriticalTerms(
 
 function preserveUnpaidRequest(request: PreservedPaidRequest): PreservedPaidRequest {
   const url = canonicalUrl(request.url);
-  const headers = new Headers(request.headers.map(([name, value]) => [name, value]));
+  const headers = new Headers(
+    request.headers.map(([name, value]): [string, string] => [name, value])
+  );
   if (headers.has("PAYMENT-SIGNATURE")) {
     throw new ChallengeError(
       "CHALLENGE_REQUEST_FAILED",

@@ -60,10 +60,7 @@ test("resource detail view - payment terms and challenge display", async ({
   await captureScreenshot(page, `payment-terms-display-${variant}.png`);
 });
 
-test("wallet connection state - connection confirmation UI", async ({
-  page,
-  browserName
-}) => {
+test("wallet connection state - connection confirmation UI", async ({ page, browserName }) => {
   const variant = browserName === "chromium" ? "desktop" : "mobile";
   await installPaidResourceRoute(page, "challenge");
   await page.goto("/explore");
@@ -77,10 +74,7 @@ test("wallet connection state - connection confirmation UI", async ({
   await captureScreenshot(page, `wallet-connected-${variant}.png`);
 });
 
-test("payment validation - terms verified and ready state", async ({
-  page,
-  browserName
-}) => {
+test("payment validation - terms verified and ready state", async ({ page, browserName }) => {
   const variant = browserName === "chromium" ? "desktop" : "mobile";
   await installPaidResourceRoute(page, "challenge");
   await page.goto("/explore");
@@ -96,10 +90,7 @@ test("payment validation - terms verified and ready state", async ({
   await captureScreenshot(page, `payment-validated-${variant}.png`);
 });
 
-test("receipt recovery - durable receipt display after reload", async ({
-  page,
-  browserName
-}) => {
+test("receipt recovery - durable receipt display after reload", async ({ page, browserName }) => {
   const variant = browserName === "chromium" ? "desktop" : "mobile";
   await installPaidResourceRoute(page, "challenge");
   await page.goto("/explore");

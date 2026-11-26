@@ -191,9 +191,7 @@ describe("ExploreSearch", () => {
 
   it("shows refresh button when results are stale and source is api", async () => {
     const staleTime = new Date("2026-10-18T11:00:00.000Z").toISOString();
-    mocks.searchCatalog.mockResolvedValueOnce(
-      searchResult(demoResources, "api")
-    );
+    mocks.searchCatalog.mockResolvedValueOnce(searchResult(demoResources, "api"));
 
     renderExplore(parseDiscoveryState(undefined));
 

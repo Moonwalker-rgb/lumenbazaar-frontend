@@ -57,7 +57,11 @@ export type ResourceType = "service" | "data";
 /**
  * Bounded consent status enum.
  */
-export type ConsentStatus = "enabled" | "disabled_by_config" | "disabled_by_consent" | "no_consent_given";
+export type ConsentStatus =
+  | "enabled"
+  | "disabled_by_config"
+  | "disabled_by_consent"
+  | "no_consent_given";
 
 /**
  * Common telemetry context included with every event.
@@ -71,7 +75,7 @@ export type TelemetryContext = {
 /**
  * Event-specific payload type unions. Only allowlisted fields per event type.
  */
-export type TelemetryEventData = 
+export type TelemetryEventData =
   | { type: "wallet_connect_attempt"; status: "initiated"; errorCode?: WalletErrorCode | null }
   | { type: "wallet_connect_success" }
   | { type: "payment_verification_attempted"; resourceType: ResourceType; assetCode: string }

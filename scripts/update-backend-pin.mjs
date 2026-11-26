@@ -34,10 +34,7 @@ async function generate() {
 
     // Verify checksum
     const documentRaw = fs.readFileSync(documentPath, "utf8");
-    const computedHash = crypto
-      .createHash("sha256")
-      .update(documentRaw)
-      .digest("hex");
+    const computedHash = crypto.createHash("sha256").update(documentRaw).digest("hex");
 
     if (computedHash !== manifest.artifact.sha256) {
       console.error(

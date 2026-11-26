@@ -98,7 +98,10 @@ const requiredOperatorColumns = ["service", "status"];
 
 export function OperatorHealthTable({ rows }: { rows: OperatorHealthRow[] }) {
   const [visibleColumns, setVisibleColumns] = useState(
-    getVisibleColumns("operator-health-table", operatorTableColumns.map((c) => c.id))
+    getVisibleColumns(
+      "operator-health-table",
+      operatorTableColumns.map((c) => c.id)
+    )
   );
 
   const handleColumnsChange = (newVisibleColumns: string[]) => {

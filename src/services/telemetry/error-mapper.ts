@@ -84,6 +84,7 @@ function mapErrorMessageToCategory(message: string, name: string): ErrorCategory
     lower.includes("network") ||
     lower.includes("offline") ||
     lower.includes("connect") ||
+    lower.includes("fetch") ||
     name.includes("NetworkError")
   ) {
     return "NETWORK_ERROR";

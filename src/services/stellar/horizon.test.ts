@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  queryAccountInfo,
-  validateAccountPreflight,
-  type StellarAccountInfo
-} from "./horizon";
+import { queryAccountInfo, validateAccountPreflight } from "./horizon";
 import {
   TESTNET_ACCOUNT_SUFFICIENT_BALANCE,
   TESTNET_ACCOUNT_INSUFFICIENT_BALANCE,
@@ -42,7 +38,7 @@ describe("queryAccountInfo", () => {
     const xlmBalance = result.balances.find((b) => b.assetCode === "XLM");
     expect(xlmBalance).toBeDefined();
     expect(xlmBalance?.assetIssuer).toBeNull();
-    expect(xlmBalance?.balance).toBe("100.0000000");
+    expect(xlmBalance?.balance).toBe("100000000");
     expect(xlmBalance?.limit).toBe("unlimited");
   });
 
@@ -56,7 +52,7 @@ describe("queryAccountInfo", () => {
     const usdcBalance = result.balances.find((b) => b.assetCode === "USDC");
     expect(usdcBalance).toBeDefined();
     expect(usdcBalance?.assetIssuer).toBe(TESTNET_USDC_ISSUER);
-    expect(usdcBalance?.balance).toBe("1000.0000000");
+    expect(usdcBalance?.balance).toBe("1000000000");
     expect(usdcBalance?.limit).toBe("10000.0000000");
   });
 
@@ -72,7 +68,11 @@ describe("queryAccountInfo", () => {
     const errorFetch = async () => createHorizonResponse500();
 
     await expect(
-      queryAccountInfo(TESTNET_ACCOUNT_SUFFICIENT_BALANCE, "stellar:testnet", errorFetch as typeof fetch)
+      queryAccountInfo(
+        TESTNET_ACCOUNT_SUFFICIENT_BALANCE,
+        "stellar:testnet",
+        errorFetch as typeof fetch
+      )
     ).rejects.toThrow("Horizon API error");
   });
 
@@ -166,7 +166,7 @@ describe("validateAccountPreflight", () => {
       );
 
       expect(result.error).toBeNull();
-      expect(result.balance).toBe("1000.0000000");
+      expect(result.balance).toBe("1000000000");
     });
 
     it("should return INSUFFICIENT_BALANCE when balance too low", async () => {
@@ -180,7 +180,7 @@ describe("validateAccountPreflight", () => {
       );
 
       expect(result.error).toBe("INSUFFICIENT_BALANCE");
-      expect(result.balance).toBe("10.0000000");
+      expect(result.balance).toBe("10000000");
     });
 
     it("should handle large balance amounts", async () => {
@@ -202,7 +202,7 @@ describe("validateAccountPreflight", () => {
         TESTNET_ACCOUNT_SUFFICIENT_BALANCE,
         "USDC",
         TESTNET_USDC_ISSUER,
-        "10000000000", // Exactly 1000.0000000 in atomic units
+        "1000000000", // Exactly 1000.0000000 in atomic units
         "stellar:testnet",
         mockFetch
       );
@@ -304,7 +304,7 @@ describe("big integer balance comparison", () => {
       TESTNET_ACCOUNT_SUFFICIENT_BALANCE,
       "USDC",
       TESTNET_USDC_ISSUER,
-      "10000000000", // Exactly 1000 USDC in stroops
+      "1000000000", // Exactly 1000 USDC in atomic units
       "stellar:testnet",
       mockFetch
     );
@@ -326,22 +326,22 @@ describe("big integer balance comparison", () => {
   });
 
   it("should handle amounts with leading zeros in balance", async () => {
-    // Mock account with balance like "001000.0000000" (with leading zeros in account data)
+    // Mock raw Horizon response with leading zeros in the balance string
     const customFetch = async () => {
-      const account: StellarAccountInfo = {
+      const account = {
         id: "GTEST",
         sequence: "123",
         balances: [
           {
-            assetCode: "XLM",
-            assetIssuer: null,
-            balance: "100.0000000",
+            asset_type: "native",
+            balance: "100000000",
             limit: "unlimited"
           },
           {
-            assetCode: "USDC",
-            assetIssuer: TESTNET_USDC_ISSUER,
-            balance: "00500.0000000", // With leading zeros
+            asset_code: "USDC",
+            asset_issuer: TESTNET_USDC_ISSUER,
+            asset_type: "credit_alphanum4",
+            balance: "00500000000", // With leading zeros
             limit: "10000.0000000"
           }
         ]
@@ -363,6 +363,6 @@ describe("big integer balance comparison", () => {
     );
 
     expect(result.error).toBeNull();
-    expect(result.balance).toBe("00500.0000000");
+    expect(result.balance).toBe("00500000000");
   });
 });

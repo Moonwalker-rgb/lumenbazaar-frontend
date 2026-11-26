@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Check, ChevronDown, RotateCcw } from "lucide-react";
 import { clsx } from "clsx";
 
@@ -17,6 +17,10 @@ export interface ColumnOption {
   label: string;
   required?: boolean;
 }
+
+const subscribeToNoStore = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 export interface ColumnChooserProps {
   /**
@@ -60,7 +64,7 @@ export interface ColumnChooserProps {
 
 /**
  * ColumnChooser: A dropdown menu for toggling table column visibility.
- * 
+ *
  * Features:
  * - Toggle individual column visibility
  * - Prevents hiding required columns
@@ -86,14 +90,13 @@ export function ColumnChooser({
       storage
     );
   });
-  const [mounted, setMounted] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Track mount state for hydration safety
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Hydration-safe mount state: the server snapshot is false during SSR and
+  // hydration, while the client snapshot is true immediately afterwards. This
+  // avoids a synchronous setState in an effect.
+  const mounted = useSyncExternalStore(subscribeToNoStore, getClientSnapshot, getServerSnapshot);
 
   // Close menu on outside click
   useEffect(() => {
@@ -127,7 +130,7 @@ export function ColumnChooser({
         setIsOpen(false);
         // Restore focus to trigger after closing
         requestAnimationFrame(() => {
-          triggerRef.current?.focus();
+          focusTrigger();
         });
       }
     };
@@ -143,8 +146,11 @@ export function ColumnChooser({
     if (isOpen) return;
 
     // Only restore if we previously had focus
-    if (document.activeElement === menuRef.current || menuRef.current?.contains(document.activeElement as Node)) {
-      triggerRef.current?.focus();
+    if (
+      document.activeElement === menuRef.current ||
+      menuRef.current?.contains(document.activeElement as Node)
+    ) {
+      focusTrigger();
     }
   }, [isOpen]);
 
@@ -190,30 +196,35 @@ export function ColumnChooser({
 
   const allVisible = hiddenCount === 0;
 
+  // The shared Button does not forward refs, so focus its DOM node via the wrapper.
+  function focusTrigger() {
+    triggerRef.current?.querySelector("button")?.focus();
+  }
+
   if (!mounted) {
     return null;
   }
 
   return (
     <div className="relative">
-      <Button
-        ref={triggerRef}
-        onClick={() => setIsOpen(!isOpen)}
-        variant="secondary"
-        size="sm"
-        className={clsx("flex items-center gap-2", buttonClassName)}
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        aria-label={`${buttonLabel}${hiddenCount > 0 ? ` (${hiddenCount} hidden)` : ""}`}
-      >
-        {buttonLabel}
-        {hiddenCount > 0 && (
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-xs font-semibold text-amber-700">
-            {hiddenCount}
-          </span>
-        )}
-        <ChevronDown aria-hidden="true" className="h-4 w-4" />
-      </Button>
+      <div className="inline-flex" ref={triggerRef}>
+        <Button
+          onClick={() => setIsOpen(!isOpen)}
+          variant="secondary"
+          className={clsx("flex items-center gap-2", buttonClassName)}
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          aria-label={`${buttonLabel}${hiddenCount > 0 ? ` (${hiddenCount} hidden)` : ""}`}
+        >
+          {buttonLabel}
+          {hiddenCount > 0 && (
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-xs font-semibold text-amber-700">
+              {hiddenCount}
+            </span>
+          )}
+          <ChevronDown aria-hidden="true" className="h-4 w-4" />
+        </Button>
+      </div>
 
       {isOpen && (
         <div
@@ -223,7 +234,7 @@ export function ColumnChooser({
           onKeyDown={(e) => {
             if (e.key === "Escape") {
               setIsOpen(false);
-              triggerRef.current?.focus();
+              focusTrigger();
             }
           }}
         >
@@ -257,17 +268,10 @@ export function ColumnChooser({
                   <span
                     className={clsx(
                       "flex h-4 w-4 items-center justify-center rounded border",
-                      isVisible
-                        ? "border-teal-600 bg-teal-50"
-                        : "border-slate-300 bg-white"
+                      isVisible ? "border-teal-600 bg-teal-50" : "border-slate-300 bg-white"
                     )}
                   >
-                    {isVisible && (
-                      <Check
-                        aria-hidden="true"
-                        className="h-3 w-3 text-teal-700"
-                      />
-                    )}
+                    {isVisible && <Check aria-hidden="true" className="h-3 w-3 text-teal-700" />}
                   </span>
                   <span className="flex-1">{column.label}</span>
                   {isRequired && (
